@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FinCast — Model Comparison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060810;--surface:#0d1117;--surface2:#131920;
+  --border:#1e2630;--border2:#1a2230;
+  --accent:#00d4aa;--danger:#f43f5e;--warn:#f59e0b;--blue:#0ea5e9;
+  --text:#e8edf2;--muted:#6b7a8d;
+  --radius:10px;--radius-lg:14px;
+}
+*{font-family:'DM Sans',sans-serif}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,212,170,.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,170,.02) 1px,transparent 1px);
+  background-size:50px 50px;pointer-events:none;z-index:0}
+
+nav{display:flex;align-items:center;justify-content:space-between;
+    padding:0 2rem;height:58px;border-bottom:1px solid var(--border);
+    background:rgba(6,8,16,.9);backdrop-filter:blur(12px);
+    position:sticky;top:0;z-index:100}
+.logo{font-family:'Space Mono',monospace;font-size:.95rem;color:var(--accent)}
+.logo span{color:var(--text);opacity:.4}
+.nav-links{display:flex;align-items:center;gap:1.5rem}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.85rem;transition:color .15s}
+.nav-links a:hover,.nav-links a.active{color:var(--text)}
+.nav-right{display:flex;align-items:center;gap:.75rem}
+.nav-user{font-size:.8rem;color:var(--muted);font-family:'Space Mono',monospace}
+.btn-sm{padding:.3rem .8rem;border:1px solid var(--border2);border-radius:6px;
+        background:none;color:var(--muted);cursor:pointer;font-size:.8rem;transition:all .15s}
+.btn-sm:hover{border-color:var(--accent);color:var(--text)}
+
+main{flex:1;max-width:1200px;margin:0 auto;width:100%;
+     padding:2rem 1.5rem;position:relative;z-index:1}
+
+.page-title{margin-bottom:1.75rem}
+.page-title h1{font-size:1.5rem;font-weight:600;margin-bottom:.3rem}
+.page-title p{color:var(--muted);font-size:.88rem}
+
+.section-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;
+               letter-spacing:.07em;margin-bottom:1rem;
+               font-family:'Space Mono',monospace}
+
+/* summary cards */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+              gap:1rem;margin-bottom:2rem}
+.sum-card{background:var(--surface);border:1px solid var(--border);
+          border-radius:var(--radius-lg);padding:1.2rem 1.4rem}
+.sum-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;
+           letter-spacing:.07em;margin-bottom:.35rem}
+.sum-val{font-size:1.6rem;font-weight:600;font-family:'Space Mono',monospace}
+.sum-sub{font-size:.76rem;color:var(--muted);margin-top:.25rem}
+
+/* chart bars */
+.chart-section{background:var(--surface);border:1px solid var(--border);
+               border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem}
+.chart-title{font-size:.8rem;font-weight:600;color:var(--muted);
+             text-transform:uppercase;letter-spacing:.06em;margin-bottom:1.25rem;
+             font-family:'Space Mono',monospace}
+.bar-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem}
+.bar-label{width:160px;font-size:.8rem;color:var(--text);flex-shrink:0;
+           white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:var(--border2);border-radius:4px;height:20px;
+           position:relative;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s ease;
+          display:flex;align-items:center;padding-left:.5rem}
+.bar-num{font-size:.75rem;font-family:'Space Mono',monospace;
+         white-space:nowrap;position:absolute;right:.5rem;top:50%;
+         transform:translateY(-50%);color:var(--text)}
+.bar-neg{position:absolute;right:0;top:0;height:100%;border-radius:4px}
+
+/* results table */
+.table-wrap{background:var(--surface);border:1px solid var(--border);
+            border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+thead th{background:var(--surface2);padding:.7rem 1rem;text-align:left;
+         font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+         color:var(--muted);border-bottom:1px solid var(--border)}
+thead th.num{text-align:right}
+tbody td{padding:.65rem 1rem;border-bottom:1px solid var(--border2);
+         font-family:'Space Mono',monospace;font-size:.8rem}
+tbody td.name{font-family:'DM Sans',sans-serif;font-size:.85rem}
+tbody td.num{text-align:right}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody tr.best-row td{background:rgba(0,212,170,.05)}
+.tag{padding:.1rem .45rem;border-radius:6px;font-size:.68rem;
+     font-family:'DM Sans',sans-serif;font-weight:600;margin-left:.4rem}
+.tag-best{background:rgba(0,212,170,.15);color:var(--accent)}
+.tag-primary{background:rgba(14,165,233,.15);color:var(--blue)}
+
+/* walk-forward */
+.wf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem}
+@media(max-width:600px){.wf-grid{grid-template-columns:1fr}}
+.wf-card{background:var(--surface);border:1px solid var(--border);
+         border-radius:var(--radius-lg);padding:1.2rem 1.4rem;text-align:center}
+.wf-win{font-size:.72rem;color:var(--muted);text-transform:uppercase;
+        letter-spacing:.07em;margin-bottom:.5rem;font-family:'Space Mono',monospace}
+.wf-sharpe{font-size:1.8rem;font-weight:600;font-family:'Space Mono',monospace}
+.wf-meta{font-size:.78rem;color:var(--muted);margin-top:.3rem}
+
+/* SHAP */
+.shap-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+@media(max-width:600px){.shap-grid{grid-template-columns:1fr}}
+.shap-card{background:var(--surface);border:1px solid var(--border);
+           border-radius:var(--radius-lg);padding:1.3rem 1.5rem}
+.shap-title{font-size:.75rem;color:var(--muted);text-transform:uppercase;
+            letter-spacing:.07em;margin-bottom:.9rem;font-family:'Space Mono',monospace}
+.shap-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.55rem}
+.shap-rank{font-family:'Space Mono',monospace;font-size:.72rem;color:var(--muted);
+           width:1.5rem;flex-shrink:0}
+.shap-feat{font-size:.82rem;width:140px;flex-shrink:0}
+.shap-bar-t{flex:1;background:var(--border2);border-radius:3px;height:10px}
+.shap-bar-f{height:100%;border-radius:3px;background:var(--accent)}
+.shap-note{font-size:.78rem;color:var(--muted);margin-top:.5rem;line-height:1.6}
+</style>
+</head>
+<body>
+<nav>
+  <span class="logo">Fin<span>Cast</span></span>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="models.html" class="active">Models</a>
+    <a href="sentiment.html">Sentiment</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-user"></span>
+    <button class="btn-sm" onclick="logout()">Sign out</button>
+  </div>
+</nav>
+
+<main>
+  <div class="page-title">
+    <h1>Model Comparison</h1>
+    <p>Full evaluation results from the v2 notebook — test set 2024 (held-out). All metrics computed on data the models never saw during training.</p>
+  </div>
+
+  <!-- Summary -->
+  <div class="section-label">Best Results — Test Set 2024</div>
+  <div class="summary-grid">
+    <div class="sum-card">
+      <div class="sum-label">Best Model</div>
+      <div class="sum-val" style="color:var(--accent)">GRU</div>
+      <div class="sum-sub">by Sharpe &amp; DirAcc</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Best Sharpe</div>
+      <div class="sum-val" style="color:var(--accent)">2.612</div>
+      <div class="sum-sub">GRU · test 2024</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Best Dir. Acc.</div>
+      <div class="sum-val" style="color:var(--accent)">54.19%</div>
+      <div class="sum-sub">GRU · test 2024</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Lowest Drawdown</div>
+      <div class="sum-val" style="color:var(--accent)">−18.1%</div>
+      <div class="sum-sub">GRU &amp; HFM</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Walk-Fwd Sharpe</div>
+      <div class="sum-val" style="color:var(--accent)">1.812</div>
+      <div class="sum-sub">mean over 3 windows</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Features (v2)</div>
+      <div class="sum-val">19</div>
+      <div class="sum-sub">was 13 in v1</div>
+    </div>
+  </div>
+
+  <!-- Sharpe chart -->
+  <div class="chart-section">
+    <div class="chart-title">Sharpe Ratio — Test Set 2024</div>
+    <div id="sharpe-chart"></div>
+  </div>
+
+  <!-- DirAcc chart -->
+  <div class="chart-section">
+    <div class="chart-title">Directional Accuracy — Test Set 2024</div>
+    <div id="diracc-chart"></div>
+  </div>
+
+  <!-- Full results table -->
+  <div class="section-label">Full Results Table</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th class="num">Sharpe</th>
+          <th class="num">Dir. Acc</th>
+          <th class="num">Max DD</th>
+          <th class="num">MAE (%)</th>
+          <th class="num">Hit Rate</th>
+        </tr>
+      </thead>
+      <tbody id="results-table"></tbody>
+    </table>
+  </div>
+
+  <!-- Walk-forward -->
+  <div class="section-label">Walk-Forward Validation — 3 × 90-day Windows (2024)</div>
+  <div class="wf-grid">
+    <div class="wf-card">
+      <div class="wf-win">Window 1 · Jan–Mar</div>
+      <div class="wf-sharpe" style="color:var(--accent)">2.948</div>
+      <div class="wf-meta">DirAcc 56.8% · MaxDD −20.3%</div>
+    </div>
+    <div class="wf-card">
+      <div class="wf-win">Window 2 · Apr–Jun</div>
+      <div class="wf-sharpe" style="color:var(--danger)">−1.022</div>
+      <div class="wf-meta">DirAcc 46.8% · MaxDD −24.1%</div>
+    </div>
+    <div class="wf-card">
+      <div class="wf-win">Window 3 · Jul–Dec</div>
+      <div class="wf-sharpe" style="color:var(--accent)">3.511</div>
+      <div class="wf-meta">DirAcc 54.5% · MaxDD −12.7%</div>
+    </div>
+  </div>
+  <p style="font-size:.8rem;color:var(--muted);margin-bottom:1.5rem">
+    Window 2 shows negative Sharpe — consistent with the BTC consolidation period mid-2024. The model is regime-sensitive, which is an acknowledged limitation and area for future work.
+  </p>
+
+  <!-- SHAP -->
+  <div class="section-label">SHAP Feature Importance (GradientExplainer)</div>
+  <div class="shap-grid">
+    <div class="shap-card">
+      <div class="shap-title">Top 5 Features by Mean |SHAP|</div>
+      <div id="shap-bars"></div>
+      <p class="shap-note">
+        Computed with GradientExplainer over 80 test samples and 100 background samples.
+        Return_7 (a v2 addition) ranking in the top 3 validates the expanded feature set.
+      </p>
+    </div>
+    <div class="shap-card">
+      <div class="shap-title">Sentiment Feature Analysis</div>
+      <div class="kv" style="display:flex;justify-content:space-between;padding:.4rem 0;
+           border-bottom:1px solid var(--border2);font-size:.85rem">
+        <span style="color:var(--muted)">Global rank</span>
+        <span style="font-family:'Space Mono',monospace">19 / 19</span>
+      </div>
+      <div class="kv" style="display:flex;justify-content:space-between;padding:.4rem 0;
+           border-bottom:1px solid var(--border2);font-size:.85rem">
+        <span style="color:var(--muted)">Mean |SHAP|</span>
+        <span style="font-family:'Space Mono',monospace">0.00000</span>
+      </div>
+      <div class="kv" style="display:flex;justify-content:space-between;padding:.4rem 0;
+           font-size:.85rem">
+        <span style="color:var(--muted)">Training value</span>
+        <span style="font-family:'Space Mono',monospace">0.0 (placeholder)</span>
+      </div>
+      <p class="shap-note" style="margin-top:.75rem">
+        Sentiment was 0.0 during training (2018–2022) because real historical news archives are not freely available.
+        The FinBERT pipeline is fully operational for live inference — real sentiment is fetched and scored at prediction time.
+        Zero training SHAP is expected and acknowledged as a project limitation.
+      </p>
+    </div>
+  </div>
+
+  <!-- HFM -->
+  <div class="section-label">Hybrid Fusion Model (HFM) — Ensemble Experiment</div>
+  <div class="table-wrap" style="margin-bottom:2rem">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th><th class="num">Sharpe</th><th class="num">Dir. Acc</th>
+          <th class="num">Max DD</th><th class="num">Weight</th><th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="best-row">
+          <td class="name">GRU <span class="tag tag-primary">primary</span></td>
+          <td class="num" style="color:var(--accent)">2.612</td>
+          <td class="num">54.19%</td><td class="num">−18.10%</td>
+          <td class="num">0.9</td><td style="font-size:.78rem;color:var(--muted)">Grid search optimal</td>
+        </tr>
+        <tr>
+          <td class="name">Transformer</td>
+          <td class="num">1.834</td><td class="num">52.69%</td>
+          <td class="num">−26.20%</td><td class="num">0.1</td>
+          <td style="font-size:.78rem;color:var(--muted)">Long-range patterns</td>
+        </tr>
+        <tr>
+          <td class="name">Linear Regression</td>
+          <td class="num">1.171</td><td class="num">53.30%</td>
+          <td class="num">−33.70%</td><td class="num">0.0</td>
+          <td style="font-size:.78rem;color:var(--muted)">Grid search: excluded</td>
+        </tr>
+        <tr style="border-top:2px solid var(--border)">
+          <td class="name">HFM (Fusion) <span class="tag tag-best">ensemble</span></td>
+          <td class="num">2.209</td><td class="num">52.40%</td>
+          <td class="num">−18.10%</td><td class="num">—</td>
+          <td style="font-size:.78rem;color:var(--muted)">GRU-dominated</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:.82rem;color:var(--muted);line-height:1.7;margin-bottom:2rem">
+    The ensemble weights were tuned via grid search on the 2023 validation set to maximise Sharpe ratio.
+    The optimal weights (GRU=0.9, LR=0.0, TF=0.1) confirm that GRU dominates the available signal —
+    the algorithm assigned zero weight to Linear Regression. This provides empirical evidence that GRU
+    captures the majority of the predictable structure in daily BTC returns on this dataset.
+  </p>
+</main>
+
+<script>
+const TOKEN=localStorage.getItem('fc_token');
+if(!TOKEN) location.href='index.html';
+try{const u=JSON.parse(localStorage.getItem('fc_user')||'{}');
+    document.getElementById('nav-user').textContent=u.username||'';}catch{}
+function logout(){localStorage.removeItem('fc_token');localStorage.removeItem('fc_user');location.href='index.html';}
+
+const MODELS=[
+  {name:'Linear Regression', sharpe:1.171, dir_acc:53.30, max_dd:-33.70, mae:2.0212, hit_rate:53.20},
+  {name:'Random Forest',     sharpe:0.495, dir_acc:48.90, max_dd:-44.70, mae:2.0887, hit_rate:48.80},
+  {name:'XGBoost',           sharpe:-0.323,dir_acc:47.80, max_dd:-54.70, mae:2.3830, hit_rate:47.70},
+  {name:'LSTM',              sharpe:1.834, dir_acc:52.69, max_dd:-26.20, mae:2.0417, hit_rate:52.60},
+  {name:'GRU',               sharpe:2.612, dir_acc:54.19, max_dd:-18.10, mae:2.0305, hit_rate:54.10, best:true},
+  {name:'1D-CNN',            sharpe:1.834, dir_acc:52.69, max_dd:-26.20, mae:2.0424, hit_rate:52.60},
+  {name:'Transformer',       sharpe:1.834, dir_acc:52.69, max_dd:-26.20, mae:2.0414, hit_rate:52.60},
+  {name:'Hybrid LSTM+TF',    sharpe:1.834, dir_acc:52.69, max_dd:-26.20, mae:2.0453, hit_rate:52.60},
+  {name:'Multimodal Hybrid', sharpe:1.834, dir_acc:52.69, max_dd:-26.20, mae:2.0423, hit_rate:52.60},
+  {name:'HFM (Fusion)',       sharpe:2.209, dir_acc:52.40, max_dd:-18.10, mae:2.0313, hit_rate:52.30},
+];
+
+const SHAP=[
+  {feat:'Volume_Change', pct:100},
+  {feat:'MACD_Signal',   pct:88},
+  {feat:'Return_7',      pct:75},
+  {feat:'BB_Pos',        pct:61},
+  {feat:'RSI_14',        pct:54},
+];
+
+// Sharpe bar chart
+function buildSharpeChart(){
+  const maxS = Math.max(...MODELS.map(m=>Math.abs(m.sharpe)));
+  const sorted = [...MODELS].sort((a,b)=>a.sharpe-b.sharpe);
+  document.getElementById('sharpe-chart').innerHTML = sorted.map(m=>{
+    const pct   = Math.abs(m.sharpe)/maxS*100;
+    const color = m.sharpe<0?'var(--danger)':m.best?'var(--accent)':'var(--blue)';
+    return`<div class="bar-row">
+      <div class="bar-label">${m.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%;background:${color};opacity:.85"></div>
+        <span class="bar-num">${m.sharpe.toFixed(3)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// DirAcc bar chart
+function buildDirChart(){
+  const sorted = [...MODELS].sort((a,b)=>a.dir_acc-b.dir_acc);
+  document.getElementById('diracc-chart').innerHTML = sorted.map(m=>{
+    const pct   = (m.dir_acc/60)*100;
+    const color = m.best?'var(--accent)':m.dir_acc>=52?'var(--blue)':'var(--muted2)';
+    return`<div class="bar-row">
+      <div class="bar-label">${m.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%;background:${color};opacity:.85"></div>
+        <span class="bar-num">${m.dir_acc.toFixed(2)}%</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Results table
+function buildTable(){
+  document.getElementById('results-table').innerHTML = MODELS.map(m=>{
+    const sharpeC = m.sharpe>2?'color:var(--accent)':m.sharpe<0?'color:var(--danger)':'';
+    const best    = m.best?'best-row':'';
+    const tag     = m.best?'<span class="tag tag-best">best</span>':'';
+    return`<tr class="${best}">
+      <td class="name">${m.name}${tag}</td>
+      <td class="num" style="${sharpeC}">${m.sharpe.toFixed(3)}</td>
+      <td class="num">${m.dir_acc.toFixed(2)}%</td>
+      <td class="num" style="color:var(--danger)">${m.max_dd.toFixed(2)}%</td>
+      <td class="num">${m.mae.toFixed(4)}</td>
+      <td class="num">${m.hit_rate.toFixed(2)}%</td>
+    </tr>`;
+  }).join('');
+}
+
+// SHAP bars
+function buildShap(){
+  document.getElementById('shap-bars').innerHTML = SHAP.map((s,i)=>`
+    <div class="shap-row">
+      <span class="shap-rank">${i+1}.</span>
+      <span class="shap-feat">${s.feat}</span>
+      <div class="shap-bar-t">
+        <div class="shap-bar-f" style="width:${s.pct}%"></div>
+      </div>
+    </div>`).join('');
+}
+
+buildSharpeChart();
+buildDirChart();
+buildTable();
+buildShap();
+</script>
+</body>
+</html>

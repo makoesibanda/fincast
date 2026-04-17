@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FinCast — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060810;--surface:#0d1117;--surface2:#131920;
+  --border:#1e2630;--border2:#1a2230;
+  --accent:#00d4aa;--danger:#f43f5e;--warn:#f59e0b;--blue:#0ea5e9;
+  --text:#e8edf2;--muted:#6b7a8d;
+  --radius:10px;--radius-lg:14px;
+}
+*{font-family:'DM Sans',sans-serif}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,212,170,.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,170,.02) 1px,transparent 1px);
+  background-size:50px 50px;pointer-events:none;z-index:0}
+
+nav{display:flex;align-items:center;justify-content:space-between;
+    padding:0 2rem;height:58px;border-bottom:1px solid var(--border);
+    background:rgba(6,8,16,.9);backdrop-filter:blur(12px);
+    position:sticky;top:0;z-index:100}
+.logo{font-family:'Space Mono',monospace;font-size:.95rem;color:var(--accent)}
+.logo span{color:var(--text);opacity:.4}
+.admin-badge{font-size:.68rem;background:rgba(245,158,11,.15);color:var(--warn);
+             border:1px solid rgba(245,158,11,.25);border-radius:5px;
+             padding:.1rem .4rem;margin-left:.5rem;font-family:'Space Mono',monospace}
+.nav-right{display:flex;align-items:center;gap:.75rem}
+.nav-link{color:var(--muted);text-decoration:none;font-size:.85rem}
+.nav-link:hover{color:var(--text)}
+.btn-sm{padding:.3rem .8rem;border:1px solid var(--border2);border-radius:6px;
+        background:none;color:var(--muted);cursor:pointer;font-size:.8rem;transition:all .15s}
+.btn-sm:hover{border-color:var(--accent);color:var(--text)}
+
+main{flex:1;max-width:1200px;margin:0 auto;width:100%;
+     padding:2rem 1.5rem;position:relative;z-index:1}
+
+.section-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;
+               letter-spacing:.07em;margin-bottom:1rem;
+               font-family:'Space Mono',monospace}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+            gap:1rem;margin-bottom:2rem}
+.s-card{background:var(--surface);border:1px solid var(--border);
+        border-radius:var(--radius-lg);padding:1.2rem 1.4rem}
+.s-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;
+         letter-spacing:.07em;margin-bottom:.35rem}
+.s-val{font-size:1.65rem;font-weight:600;font-family:'Space Mono',monospace}
+.s-sub{font-size:.76rem;color:var(--muted);margin-top:.25rem}
+
+.tabs{display:flex;gap:.5rem;margin-bottom:1.5rem}
+.tab{padding:.4rem 1rem;border:1px solid var(--border2);border-radius:var(--radius);
+     background:none;color:var(--muted);cursor:pointer;font-size:.85rem;transition:all .15s}
+.tab.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
+
+.table-wrap{background:var(--surface);border:1px solid var(--border);
+            border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+thead th{background:var(--surface2);padding:.7rem 1rem;text-align:left;
+         font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+         color:var(--muted);border-bottom:1px solid var(--border)}
+tbody td{padding:.65rem 1rem;border-bottom:1px solid var(--border2);
+         font-family:'Space Mono',monospace;font-size:.8rem}
+tbody td.name{font-family:'DM Sans',sans-serif;font-size:.85rem}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+.empty{text-align:center;color:var(--muted);padding:2rem}
+
+.pill{padding:.12rem .5rem;border-radius:8px;font-size:.7rem;font-weight:600;
+      font-family:'DM Sans',sans-serif}
+.pill-active{background:rgba(0,212,170,.12);color:var(--accent)}
+.pill-inactive{background:rgba(244,63,94,.12);color:var(--danger)}
+.pill-admin{background:rgba(14,165,233,.12);color:var(--blue)}
+.pill-user{background:rgba(107,122,141,.12);color:var(--muted)}
+.pill-up{background:rgba(0,212,170,.12);color:var(--accent)}
+.pill-down{background:rgba(244,63,94,.12);color:var(--danger)}
+
+.btn-tog{padding:.2rem .6rem;font-size:.75rem;border-radius:6px;
+         border:1px solid var(--border2);background:none;color:var(--muted);
+         cursor:pointer;transition:all .15s}
+.btn-tog:hover{border-color:var(--danger);color:var(--danger)}
+
+.pagination{display:flex;justify-content:flex-end;align-items:center;gap:.5rem;
+            padding:.75rem 1rem;background:var(--surface2);
+            border-top:1px solid var(--border);font-size:.82rem}
+.page-info{color:var(--muted);flex:1;font-family:'Space Mono',monospace;font-size:.75rem}
+.btn-page{padding:.28rem .65rem;border:1px solid var(--border2);border-radius:6px;
+          background:none;color:var(--muted);cursor:pointer;font-size:.8rem}
+.btn-page:hover:not(:disabled){border-color:var(--accent);color:var(--text)}
+.btn-page:disabled{opacity:.35;cursor:not-allowed}
+
+.alert{padding:.75rem 1rem;border-radius:var(--radius);font-size:.85rem;
+       margin-bottom:1rem;display:none}
+.alert.err{background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.25);
+           color:var(--danger)}
+</style>
+</head>
+<body>
+<nav>
+  <div style="display:flex;align-items:center">
+    <span class="logo">Fin<span>Cast</span></span>
+    <span class="admin-badge">ADMIN</span>
+  </div>
+  <div class="nav-right">
+    <a class="nav-link" href="dashboard.html">← Dashboard</a>
+    <button class="btn-sm" onclick="logout()">Sign out</button>
+  </div>
+</nav>
+
+<main>
+  <div class="alert err" id="err-alert"></div>
+
+  <div class="section-label">System Overview</div>
+  <div class="stats-grid">
+    <div class="s-card">
+      <div class="s-label">Total Users</div>
+      <div class="s-val" id="s-users">—</div>
+      <div class="s-sub" id="s-active">— active</div>
+    </div>
+    <div class="s-card">
+      <div class="s-label">Total Predictions</div>
+      <div class="s-val" id="s-preds">—</div>
+      <div class="s-sub" id="s-dirs">— up / — down</div>
+    </div>
+    <div class="s-card">
+      <div class="s-label">Avg Confidence</div>
+      <div class="s-val" id="s-conf">—</div>
+      <div class="s-sub">across all predictions</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-u" onclick="showTab('users')">Users</button>
+    <button class="tab"        id="tab-p" onclick="showTab('preds')">Predictions</button>
+  </div>
+
+  <!-- Users -->
+  <div id="panel-users">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Username</th><th>Email</th>
+              <th>Role</th><th>Status</th><th>Joined</th><th>Action</th></tr>
+        </thead>
+        <tbody id="users-body">
+          <tr><td colspan="7" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Predictions -->
+  <div id="panel-preds" style="display:none">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>User</th><th>Ticker</th><th>Current</th>
+              <th>Predicted</th><th>Return</th><th>Dir</th>
+              <th>Conf</th><th>Sentiment</th><th>Date</th></tr>
+        </thead>
+        <tbody id="preds-body">
+          <tr><td colspan="10" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <span class="page-info" id="page-info"></span>
+        <button class="btn-page" id="btn-prev" onclick="loadPreds(predPage-1)">‹</button>
+        <button class="btn-page" id="btn-next" onclick="loadPreds(predPage+1)">›</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API='/api';
+const TOKEN=localStorage.getItem('fc_token');
+if(!TOKEN) location.href='index.html';
+let predPage=1;
+
+function authH(){return{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN};}
+function logout(){localStorage.removeItem('fc_token');localStorage.removeItem('fc_user');location.href='index.html';}
+function showErr(m){const el=document.getElementById('err-alert');el.textContent=m;el.style.display=m?'block':'none';}
+function fmt(n,dp=2){return n!=null&&!isNaN(n)?Number(n).toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp}):'—';}
+function fmtPct(n){return n!=null?(n>=0?'+':'')+fmt(n,4)+'%':'—';}
+
+function showTab(t){
+  document.getElementById('panel-users').style.display=t==='users'?'':'none';
+  document.getElementById('panel-preds').style.display=t==='preds'?'':'none';
+  document.getElementById('tab-u').classList.toggle('active',t==='users');
+  document.getElementById('tab-p').classList.toggle('active',t==='preds');
+  if(t==='preds') loadPreds(1);
+}
+
+async function loadStats(){
+  const r=await fetch(`${API}/admin/stats`,{headers:authH()});
+  if(r.status===401||r.status===403){showErr('Admin access required.');return;}
+  const d=await r.json();
+  document.getElementById('s-users').textContent=d.users?.total??'—';
+  document.getElementById('s-active').textContent=(d.users?.active??'—')+' active';
+  document.getElementById('s-preds').textContent=d.predictions?.total??'—';
+  document.getElementById('s-dirs').textContent=
+    (d.predictions?.up??'—')+' up / '+(d.predictions?.down??'—')+' down';
+  const c=d.avg_confidence;
+  document.getElementById('s-conf').textContent=c!=null?fmt(c*100,1)+'%':'—';
+}
+
+async function loadUsers(){
+  const r=await fetch(`${API}/admin/users`,{headers:authH()});
+  if(!r.ok){showErr('Could not load users');return;}
+  const users=await r.json();
+  const tbody=document.getElementById('users-body');
+  if(!users.length){tbody.innerHTML='<tr><td colspan="7" class="empty">No users.</td></tr>';return;}
+  tbody.innerHTML=users.map(u=>`<tr>
+    <td>${u.id}</td>
+    <td class="name">${u.username}</td>
+    <td class="name">${u.email}</td>
+    <td><span class="pill ${u.role==='admin'?'pill-admin':'pill-user'}">${u.role}</span></td>
+    <td><span class="pill ${u.is_active?'pill-active':'pill-inactive'}">${u.is_active?'active':'inactive'}</span></td>
+    <td>${new Date(u.created_at).toLocaleDateString()}</td>
+    <td><button class="btn-tog" onclick="toggleUser(${u.id},${!u.is_active})">
+      ${u.is_active?'Deactivate':'Activate'}</button></td>
+  </tr>`).join('');
+}
+
+async function toggleUser(id,activate){
+  const r=await fetch(`${API}/admin/users/${id}`,{
+    method:'PATCH',headers:authH(),
+    body:JSON.stringify({is_active:activate})});
+  if(!r.ok){const d=await r.json();showErr(d.error||'Failed');return;}
+  await loadUsers();await loadStats();
+}
+
+async function loadPreds(page){
+  predPage=page;
+  const r=await fetch(`${API}/admin/predictions?page=${page}&per_page=20`,{headers:authH()});
+  if(!r.ok){showErr('Could not load predictions');return;}
+  const d=await r.json();
+  document.getElementById('page-info').textContent=
+    `Page ${d.page} of ${d.pages} (${d.total} total)`;
+  document.getElementById('btn-prev').disabled=page<=1;
+  document.getElementById('btn-next').disabled=page>=d.pages;
+  const tbody=document.getElementById('preds-body');
+  if(!d.predictions?.length){tbody.innerHTML='<tr><td colspan="10" class="empty">No predictions.</td></tr>';return;}
+  tbody.innerHTML=d.predictions.map(p=>{
+    const up=p.direction==='up';
+    return`<tr>
+      <td>${p.id}</td><td>${p.user_id}</td><td>${p.ticker}</td>
+      <td>$${fmt(p.current_price)}</td>
+      <td class="${up?'':''}">$${fmt(p.predicted_price)}</td>
+      <td>${fmtPct(p.pred_return_pct)}</td>
+      <td><span class="pill ${up?'pill-up':'pill-down'}">${up?'↑':'↓'} ${p.direction}</span></td>
+      <td>${fmt(p.confidence*100,1)}%</td>
+      <td>${p.sentiment_score!=null?fmt(p.sentiment_score,4):'—'}</td>
+      <td>${new Date(p.created_at).toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+}
+
+(async()=>{await loadStats();await loadUsers();})();
+</script>
+</body>
+</html>

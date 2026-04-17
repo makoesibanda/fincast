@@ -1,0 +1,30 @@
+{
+  "feature_cols": [
+    "Return",
+    "Log_Return",
+    "Return_3",
+    "Return_7",
+    "Return_14",
+    "Price_vs_SMA7",
+    "Price_vs_SMA21",
+    "EMA_ratio",
+    "MACD",
+    "MACD_Signal",
+    "MACD_Hist",
+    "RSI_14",
+    "BB_Width",
+    "BB_Pos",
+    "Vol_7",
+    "Vol_ratio",
+    "ATR_14",
+    "Volume_Change",
+    "Sentiment"
+  ],
+  "target_col": "Return",
+  "target_type": "return",
+  "window_size": 30,
+  "n_features": 19,
+  "train_end": "2022-12-31",
+  "val_end": "2023-12-31",
+  "test_end": "2024-12-31"
+}

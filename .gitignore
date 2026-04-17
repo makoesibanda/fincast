@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.env
+*.db
+*.sqlite3
+backend/models/saved/*.pt
+backend/models/saved/*.pkl
+venv/
+.venv/
+.DS_Store

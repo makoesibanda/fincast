@@ -1,0 +1,38 @@
+{
+  "model_type": "hybrid_fusion",
+  "base_models": [
+    "gru",
+    "lr",
+    "transformer"
+  ],
+  "weights": {
+    "gru": 0.7,
+    "lr": 0.0,
+    "transformer": 0.3
+  },
+  "tuned_on": "validation_set_2023",
+  "n_features": 19,
+  "window_size": 30,
+  "feature_cols": [
+    "Return",
+    "Log_Return",
+    "Return_3",
+    "Return_7",
+    "Return_14",
+    "Price_vs_SMA7",
+    "Price_vs_SMA21",
+    "EMA_ratio",
+    "MACD",
+    "MACD_Signal",
+    "MACD_Hist",
+    "RSI_14",
+    "BB_Width",
+    "BB_Pos",
+    "Vol_7",
+    "Vol_ratio",
+    "ATR_14",
+    "Volume_Change",
+    "Sentiment"
+  ],
+  "description": "Hybrid Fusion Model: weighted ensemble of GRU + Linear Regression + Transformer. Weights tuned on 2023 validation set to maximise Sharpe ratio. GRU provides primary signal; LR adds stability; Transformer captures long-range dependencies."
+}

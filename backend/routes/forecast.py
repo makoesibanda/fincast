@@ -1,0 +1,93 @@
+from flask import Blueprint, jsonify, request, current_app, g
+from routes.auth import login_required
+from database import db, Prediction
+from model_loader import get_prediction
+
+forecast_bp = Blueprint('forecast', __name__)
+
+
+@forecast_bp.route('/predict', methods=['GET', 'POST'])
+@login_required
+def predict():
+    ticker = 'BTC-USD'
+    if request.method == 'POST':
+        data   = request.get_json(silent=True) or {}
+        ticker = data.get('ticker', 'BTC-USD').upper()
+    else:
+        ticker = request.args.get('ticker', 'BTC-USD').upper()
+
+    try:
+        result = get_prediction(ticker)
+    except Exception as e:
+        current_app.logger.error('Prediction error: %s', e)
+        return jsonify({'error': str(e)}), 500
+
+    try:
+        row = Prediction(
+            user_id         = g.current_user.id,
+            ticker          = result['ticker'],
+            current_price   = result['current_price'],
+            predicted_price = result['predicted_price'],
+            pred_return_pct = result['pred_return_pct'],
+            direction       = result['direction'],
+            confidence      = result['confidence'],
+            vol_14d         = result['vol_14d'],
+            sentiment_score = result.get('sentiment_score', 0.0),
+        )
+        db.session.add(row)
+        db.session.commit()
+        result['prediction_id'] = row.id
+    except Exception as e:
+        current_app.logger.warning('DB save failed: %s', e)
+        db.session.rollback()
+
+    return jsonify(result), 200
+
+
+@forecast_bp.route('/history', methods=['GET'])
+@login_required
+def history():
+    limit = min(int(request.args.get('limit', 20)), 100)
+    rows  = (Prediction.query
+             .filter_by(user_id=g.current_user.id)
+             .order_by(Prediction.created_at.desc())
+             .limit(limit).all())
+    return jsonify([r.to_dict() for r in rows]), 200
+
+
+@forecast_bp.route('/models', methods=['GET'])
+@login_required
+def model_stats():
+    # static results from v2 notebook — test set 2024
+    stats = [
+        {'model': 'Linear Regression', 'sharpe': 1.171, 'dir_acc': 53.30, 'max_dd': -33.70, 'mae': 2.0212, 'hit_rate': 53.20},
+        {'model': 'Random Forest',      'sharpe': 0.495, 'dir_acc': 48.90, 'max_dd': -44.70, 'mae': 2.0887, 'hit_rate': 48.80},
+        {'model': 'XGBoost',            'sharpe':-0.323, 'dir_acc': 47.80, 'max_dd': -54.70, 'mae': 2.3830, 'hit_rate': 47.70},
+        {'model': 'LSTM',               'sharpe': 1.834, 'dir_acc': 52.69, 'max_dd': -26.20, 'mae': 2.0417, 'hit_rate': 52.60},
+        {'model': 'GRU',                'sharpe': 2.612, 'dir_acc': 54.19, 'max_dd': -18.10, 'mae': 2.0305, 'hit_rate': 54.10},
+        {'model': '1D-CNN',             'sharpe': 1.834, 'dir_acc': 52.69, 'max_dd': -26.20, 'mae': 2.0424, 'hit_rate': 52.60},
+        {'model': 'Transformer',        'sharpe': 1.834, 'dir_acc': 52.69, 'max_dd': -26.20, 'mae': 2.0414, 'hit_rate': 52.60},
+        {'model': 'Hybrid LSTM+TF',     'sharpe': 1.834, 'dir_acc': 52.69, 'max_dd': -26.20, 'mae': 2.0453, 'hit_rate': 52.60},
+        {'model': 'Multimodal Hybrid',  'sharpe': 1.834, 'dir_acc': 52.69, 'max_dd': -26.20, 'mae': 2.0423, 'hit_rate': 52.60},
+        {'model': 'HFM (Fusion)',        'sharpe': 2.209, 'dir_acc': 52.40, 'max_dd': -18.10, 'mae': 2.0313, 'hit_rate': 52.30},
+    ]
+    walk_forward = [
+        {'window': 1, 'dir_acc': 56.8, 'sharpe': 2.948, 'max_dd': -20.30},
+        {'window': 2, 'dir_acc': 46.8, 'sharpe':-1.022, 'max_dd': -24.10},
+        {'window': 3, 'dir_acc': 54.5, 'sharpe': 3.511, 'max_dd': -12.70},
+    ]
+    shap_features = [
+        {'feature': 'Volume_Change', 'rank': 1},
+        {'feature': 'MACD_Signal',   'rank': 2},
+        {'feature': 'Return_7',      'rank': 3},
+        {'feature': 'BB_Pos',        'rank': 4},
+        {'feature': 'RSI_14',        'rank': 5},
+    ]
+    return jsonify({
+        'model_results':  stats,
+        'walk_forward':   walk_forward,
+        'shap_top5':      shap_features,
+        'primary_model':  'GRU',
+        'best_sharpe':    2.612,
+        'best_dir_acc':   54.19,
+    }), 200

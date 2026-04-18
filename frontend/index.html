@@ -133,8 +133,7 @@ input:focus{border-color:var(--accent)}
 
 <script>
 const API = '/api';
-if(localStorage.getItem('fc_token')) location.href='dashboard.html';
-
+if(localStorage.getItem('fc_token')) location.href='market.html';
 function sw(t){
   document.getElementById('fl').style.display = t==='login'?'':'none';
   document.getElementById('fr').style.display = t==='reg'?'':'none';
@@ -156,7 +155,7 @@ async function doLogin(e){
     localStorage.setItem('fc_token',d.token);
     localStorage.setItem('fc_user',JSON.stringify(d.user));
     msg.textContent='Success!';msg.className='msg ok';
-    setTimeout(()=>location.href='dashboard.html',500);
+    setTimeout(()=>location.href='dashboard.html',500);    
   }catch{msg.textContent='Network error';msg.className='msg err';}
   finally{btn.disabled=false;}
 }

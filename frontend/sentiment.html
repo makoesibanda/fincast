@@ -1,275 +1,453 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>FinCast — Sentiment</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#060810;--surface:#0d1117;--surface2:#131920;
-  --border:#1e2630;--border2:#1a2230;
-  --accent:#00d4aa;--danger:#f43f5e;--warn:#f59e0b;
-  --text:#e8edf2;--muted:#6b7a8d;
-  --radius:10px;--radius-lg:14px;
-}
-*{font-family:'DM Sans',sans-serif}
-body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
-body::before{content:'';position:fixed;inset:0;
-  background-image:linear-gradient(rgba(0,212,170,.02) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,212,170,.02) 1px,transparent 1px);
-  background-size:50px 50px;pointer-events:none;z-index:0}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FinCast — Sentiment</title>
 
-nav{display:flex;align-items:center;justify-content:space-between;
-    padding:0 2rem;height:58px;border-bottom:1px solid var(--border);
-    background:rgba(6,8,16,.9);backdrop-filter:blur(12px);
-    position:sticky;top:0;z-index:100}
-.logo{font-family:'Space Mono',monospace;font-size:.95rem;color:var(--accent)}
-.logo span{color:var(--text);opacity:.4}
-.nav-links{display:flex;align-items:center;gap:1.5rem}
-.nav-links a{color:var(--muted);text-decoration:none;font-size:.85rem;transition:color .15s}
-.nav-links a:hover,.nav-links a.active{color:var(--text)}
-.nav-right{display:flex;align-items:center;gap:.75rem}
-.nav-user{font-size:.8rem;color:var(--muted);font-family:'Space Mono',monospace}
-.btn-sm{padding:.3rem .8rem;border:1px solid var(--border2);border-radius:6px;
-        background:none;color:var(--muted);cursor:pointer;font-size:.8rem;transition:all .15s}
-.btn-sm:hover{border-color:var(--accent);color:var(--text)}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-main{flex:1;max-width:1100px;margin:0 auto;width:100%;
-     padding:2rem 1.5rem;position:relative;z-index:1}
+  <link rel="stylesheet" href="fincast.css" />
 
-.page-title{margin-bottom:1.75rem}
-.page-title h1{font-size:1.5rem;font-weight:600;margin-bottom:.3rem}
-.page-title p{color:var(--muted);font-size:.88rem}
+  <style>
+    /* ── Sentiment page specific styles ─────────────────────────────── */
 
-.section-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;
-               letter-spacing:.07em;margin-bottom:1rem;
-               font-family:'Space Mono',monospace}
+    main {
+      max-width: 1100px;
+    }
 
-/* top row */
-.top-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:2rem}
-@media(max-width:700px){.top-row{grid-template-columns:1fr}}
-.stat-card{background:var(--surface);border:1px solid var(--border);
-           border-radius:var(--radius-lg);padding:1.3rem 1.5rem}
-.stat-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;
-            letter-spacing:.07em;margin-bottom:.4rem}
-.stat-val{font-size:1.65rem;font-weight:600;font-family:'Space Mono',monospace}
-.stat-sub{font-size:.78rem;color:var(--muted);margin-top:.3rem}
+    /* Three-column stat row at the top */
+    .top-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
 
-/* sentiment meter */
-.meter-card{background:var(--surface);border:1px solid var(--border);
-            border-radius:var(--radius-lg);padding:1.5rem;
-            display:flex;flex-direction:column;align-items:center;gap:.75rem;
-            grid-column:span 1}
-.meter-title{font-size:.72rem;color:var(--muted);text-transform:uppercase;
-             letter-spacing:.07em;align-self:flex-start;
-             font-family:'Space Mono',monospace}
-.meter-track{width:100%;height:12px;background:linear-gradient(
-  to right,var(--danger) 0%,var(--warn) 40%,#94a3b8 50%,var(--accent) 100%);
-  border-radius:6px;position:relative}
-.meter-thumb{width:18px;height:18px;background:var(--text);border-radius:50%;
-             position:absolute;top:-3px;transform:translateX(-50%);
-             transition:left .5s ease;box-shadow:0 0 8px rgba(0,0,0,.4)}
-.meter-labels{display:flex;justify-content:space-between;width:100%;
-              font-size:.7rem;color:var(--muted);font-family:'Space Mono',monospace}
-.meter-big{font-size:1.6rem;font-weight:700;font-family:'Space Mono',monospace}
+    @media (max-width: 700px) {
+      .top-row { grid-template-columns: 1fr; }
+    }
 
-/* refresh btn */
-.refresh-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem}
-.btn-refresh{padding:.45rem 1.2rem;background:var(--accent);color:#000;
-             border:none;border-radius:var(--radius);font-size:.85rem;
-             font-weight:600;cursor:pointer;transition:opacity .15s}
-.btn-refresh:hover:not(:disabled){opacity:.85}
-.btn-refresh:disabled{opacity:.4;cursor:not-allowed}
-.ref-status{font-size:.8rem;color:var(--muted);font-family:'Space Mono',monospace}
-.spinner{width:15px;height:15px;border:2px solid rgba(0,0,0,.2);
-         border-top-color:#000;border-radius:50%;
-         animation:spin .6s linear infinite;display:none}
-@keyframes spin{to{transform:rotate(360deg)}}
+    /* Stat cards for mean score and headline count */
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.3rem 1.5rem;
+    }
 
-/* headline cards */
-.headlines{display:flex;flex-direction:column;gap:.75rem}
-.hl-card{background:var(--surface);border:1px solid var(--border);
-         border-radius:var(--radius);padding:1rem 1.25rem;
-         display:flex;align-items:flex-start;gap:1rem;transition:border-color .15s}
-.hl-card:hover{border-color:var(--border2)}
-.hl-score-box{width:54px;height:54px;border-radius:8px;flex-shrink:0;
-              display:flex;align-items:center;justify-content:center;
-              font-family:'Space Mono',monospace;font-size:.85rem;font-weight:700}
-.pos-box{background:rgba(0,212,170,.1);color:var(--accent);border:1px solid rgba(0,212,170,.2)}
-.neg-box{background:rgba(244,63,94,.1);color:var(--danger);border:1px solid rgba(244,63,94,.2)}
-.neu-box{background:rgba(107,122,141,.1);color:var(--muted);border:1px solid rgba(107,122,141,.2)}
-.hl-body{flex:1}
-.hl-title{font-size:.88rem;line-height:1.5;margin-bottom:.35rem}
-.hl-meta{display:flex;gap:.75rem;align-items:center}
-.hl-source{font-size:.75rem;color:var(--muted);font-family:'Space Mono',monospace}
-.hl-label{padding:.1rem .45rem;border-radius:5px;font-size:.7rem;font-weight:600}
-.lbl-positive{background:rgba(0,212,170,.12);color:var(--accent)}
-.lbl-negative{background:rgba(244,63,94,.12);color:var(--danger)}
-.lbl-neutral{background:rgba(107,122,141,.12);color:var(--muted)}
-.hl-link{font-size:.75rem;color:var(--muted);text-decoration:none;
-         margin-left:auto;transition:color .15s}
-.hl-link:hover{color:var(--text)}
+    .stat-label {
+      font-size: .72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: .4rem;
+    }
 
-.empty{text-align:center;color:var(--muted);padding:3rem;
-       background:var(--surface);border:1px solid var(--border);
-       border-radius:var(--radius-lg)}
-.note-box{background:var(--surface);border:1px solid var(--border);
-          border-radius:var(--radius-lg);padding:1.2rem 1.5rem;
-          margin-bottom:1.5rem;font-size:.83rem;color:var(--muted);line-height:1.7}
-.note-box strong{color:var(--text)}
-</style>
+    .stat-val {
+      font-size: 1.65rem;
+      font-weight: 600;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .stat-sub {
+      font-size: .78rem;
+      color: var(--muted);
+      margin-top: .3rem;
+    }
+
+    /* Sentiment meter card - horizontal slider showing bearish to bullish */
+    .meter-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .meter-title {
+      font-size: .72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      align-self: flex-start;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* The coloured gradient bar */
+    .meter-track {
+      width: 100%;
+      height: 12px;
+      background: linear-gradient(to right, var(--danger) 0%, var(--warn) 40%, #94a3b8 50%, var(--accent) 100%);
+      border-radius: 6px;
+      position: relative;
+    }
+
+    /* The moveable thumb that sits on the bar */
+    .meter-thumb {
+      width: 18px;
+      height: 18px;
+      background: var(--text);
+      border-radius: 50%;
+      position: absolute;
+      top: -3px;
+      transform: translateX(-50%);
+      transition: left .5s ease;
+      box-shadow: 0 0 8px rgba(0, 0, 0, .4);
+    }
+
+    .meter-labels {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: .7rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Big number showing the current mean sentiment score */
+    .meter-big {
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Row containing the fetch button and status text */
+    .refresh-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .btn-refresh {
+      padding: .45rem 1.2rem;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+
+    .btn-refresh:hover:not(:disabled) { opacity: .85; }
+    .btn-refresh:disabled { opacity: .4; cursor: not-allowed; }
+
+    .ref-status {
+      font-size: .8rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* ── Individual headline cards ───────────────────────────────────── */
+    .headlines {
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+
+    .hl-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      transition: border-color .15s;
+    }
+
+    .hl-card:hover {
+      border-color: var(--border2);
+    }
+
+    /* Coloured score box on the left of each headline */
+    .hl-score-box {
+      width: 54px;
+      height: 54px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: .85rem;
+      font-weight: 700;
+    }
+
+    .pos-box { background: rgba(0, 212, 170, .1);  color: var(--accent); border: 1px solid rgba(0, 212, 170, .2); }
+    .neg-box { background: rgba(244, 63, 94, .1);   color: var(--danger); border: 1px solid rgba(244, 63, 94, .2); }
+    .neu-box { background: rgba(107, 122, 141, .1); color: var(--muted);  border: 1px solid rgba(107, 122, 141, .2); }
+
+    .hl-body  { flex: 1; }
+
+    .hl-title {
+      font-size: .88rem;
+      line-height: 1.5;
+      margin-bottom: .35rem;
+    }
+
+    .hl-meta {
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+    }
+
+    .hl-source {
+      font-size: .75rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Positive / negative / neutral label pill */
+    .hl-label {
+      padding: .1rem .45rem;
+      border-radius: 5px;
+      font-size: .7rem;
+      font-weight: 600;
+    }
+
+    .lbl-positive { background: rgba(0, 212, 170, .12); color: var(--accent); }
+    .lbl-negative { background: rgba(244, 63, 94, .12);  color: var(--danger); }
+    .lbl-neutral  { background: rgba(107, 122, 141, .12); color: var(--muted); }
+
+    .hl-link {
+      font-size: .75rem;
+      color: var(--muted);
+      text-decoration: none;
+      margin-left: auto;
+      transition: color .15s;
+    }
+
+    .hl-link:hover { color: var(--text); }
+
+    /* Empty state box */
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 3rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+    }
+
+    /* Info note at the top of the page */
+    .note-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.5rem;
+      font-size: .83rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .note-box strong { color: var(--text); }
+  </style>
 </head>
 <body>
-<nav>
-  <span class="logo">Fin<span>Cast</span></span>
-  <div class="nav-links">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="models.html">Models</a>
-    <a href="sentiment.html" class="active">Sentiment</a>
-  </div>
-  <div class="nav-right">
-    <span class="nav-user" id="nav-user"></span>
-    <button class="btn-sm" onclick="logout()">Sign out</button>
-  </div>
-</nav>
 
-<main>
-  <div class="page-title">
-    <h1>Live Sentiment Feed</h1>
-    <p>Real-time financial news scored with FinBERT (ProsusAI/finbert) — the NLP modality of the multimodal hybrid system.</p>
-  </div>
+  <nav>
+    <span class="logo">Fin<span>Cast</span></span>
 
-  <!-- Note -->
-  <div class="note-box">
-    <strong>About this panel:</strong> During model training (2018–2022), historical sentiment was unavailable as a zero placeholder.
-    This live feed demonstrates the operational FinBERT pipeline — headlines are fetched from financial RSS feeds and scored in real time.
-    The sentiment score feeds directly into the 19th feature of the model at inference time.
-  </div>
-
-  <!-- Top row -->
-  <div class="top-row">
-    <div class="stat-card">
-      <div class="stat-label">Mean Sentiment Score</div>
-      <div class="stat-val" id="mean-score">—</div>
-      <div class="stat-sub">−1 = very negative · +1 = very positive</div>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="models.html">Models</a>
+      <a href="sentiment.html" class="active">Sentiment</a>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Headlines Scored</div>
-      <div class="stat-val" id="hl-count">—</div>
-      <div class="stat-sub">from CoinDesk, CryptoPanic, BBC</div>
+
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <button class="btn-sm" onclick="logout()">Sign out</button>
     </div>
-    <div class="meter-card">
-      <div class="meter-title">Sentiment Meter</div>
-      <div class="meter-big" id="meter-val">—</div>
-      <div class="meter-track">
-        <div class="meter-thumb" id="meter-thumb" style="left:50%"></div>
+  </nav>
+
+  <main>
+
+    <div class="page-title">
+      <h1>Live Sentiment Feed</h1>
+      <p>Real-time financial news scored with FinBERT (ProsusAI/finbert) — the NLP modality of the multimodal hybrid system.</p>
+    </div>
+
+    <!-- Explain the sentiment placeholder used during training -->
+    <div class="note-box">
+      <strong>About this panel:</strong> During model training (2018–2022), historical sentiment was unavailable so a zero placeholder was used.
+      This live feed demonstrates the operational FinBERT pipeline — headlines are fetched from financial RSS feeds and scored in real time.
+      The sentiment score feeds directly into the 19th feature of the model at inference time.
+    </div>
+
+    <!-- Summary stats: mean score, headline count, and the visual meter -->
+    <div class="top-row">
+
+      <div class="stat-card">
+        <div class="stat-label">Mean Sentiment Score</div>
+        <div class="stat-val" id="mean-score">—</div>
+        <div class="stat-sub">−1 = very negative · +1 = very positive</div>
       </div>
-      <div class="meter-labels">
-        <span>−1 Bearish</span><span>0 Neutral</span><span>+1 Bullish</span>
+
+      <div class="stat-card">
+        <div class="stat-label">Headlines Scored</div>
+        <div class="stat-val" id="hl-count">—</div>
+        <div class="stat-sub">from CoinDesk, CryptoPanic, BBC</div>
       </div>
-    </div>
-  </div>
 
-  <!-- Refresh -->
-  <div class="refresh-row">
-    <button class="btn-refresh" id="btn-ref" onclick="loadSentiment()">
-      Fetch Headlines
-    </button>
-    <div class="spinner" id="spin"></div>
-    <span class="ref-status" id="ref-status">Click to fetch live headlines</span>
-  </div>
-
-  <!-- Headlines -->
-  <div class="section-label">Headlines &amp; Scores</div>
-  <div id="headlines-wrap">
-    <div class="empty">Click "Fetch Headlines" to load live financial news.</div>
-  </div>
-</main>
-
-<script>
-const API='/api';
-const TOKEN=localStorage.getItem('fc_token');
-if(!TOKEN) location.href='index.html';
-try{const u=JSON.parse(localStorage.getItem('fc_user')||'{}');
-    document.getElementById('nav-user').textContent=u.username||'';}catch{}
-function logout(){localStorage.removeItem('fc_token');localStorage.removeItem('fc_user');location.href='index.html';}
-function authH(){return{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN};}
-
-function fmt(n,dp=4){return n!=null&&!isNaN(n)?Number(n).toFixed(dp):'—';}
-
-function updateMeter(score){
-  const s     = Math.max(-1, Math.min(1, score));
-  const pct   = ((s + 1) / 2) * 100;
-  const thumb = document.getElementById('meter-thumb');
-  const val   = document.getElementById('meter-val');
-  thumb.style.left = pct + '%';
-  val.textContent  = (s >= 0 ? '+' : '') + s.toFixed(4);
-  val.style.color  = s > 0.05 ? 'var(--accent)' : s < -0.05 ? 'var(--danger)' : 'var(--muted)';
-}
-
-async function loadSentiment(){
-  const btn = document.getElementById('btn-ref');
-  const spin= document.getElementById('spin');
-  const sta = document.getElementById('ref-status');
-  btn.disabled=true; spin.style.display='inline-block';
-  sta.textContent='Fetching and scoring headlines…';
-
-  try{
-    const r = await fetch(`${API}/sentiment/live?max=15`, {headers: authH()});
-    if(r.status===401){logout();return;}
-    const d = await r.json();
-    if(!r.ok || d.error){
-      sta.textContent = d.error || 'Failed to fetch headlines';
-      document.getElementById('headlines-wrap').innerHTML=
-        `<div class="empty">${d.error||'No headlines available right now.'}</div>`;
-      return;
-    }
-
-    // update stats
-    document.getElementById('mean-score').textContent =
-      (d.mean_score >= 0 ? '+' : '') + fmt(d.mean_score, 4);
-    document.getElementById('mean-score').style.color =
-      d.mean_score > 0.05 ? 'var(--accent)' : d.mean_score < -0.05 ? 'var(--danger)' : 'var(--text)';
-    document.getElementById('hl-count').textContent = d.count || d.headlines?.length || 0;
-    updateMeter(d.mean_score);
-
-    // render headlines
-    const items = d.headlines || [];
-    if(!items.length){
-      document.getElementById('headlines-wrap').innerHTML=
-        '<div class="empty">No headlines returned.</div>';
-      return;
-    }
-
-    document.getElementById('headlines-wrap').innerHTML = items.map(h => {
-      const s     = h.sentiment || 0;
-      const label = h.label || 'neutral';
-      const boxC  = label==='positive'?'pos-box':label==='negative'?'neg-box':'neu-box';
-      const lblC  = label==='positive'?'lbl-positive':label==='negative'?'lbl-negative':'lbl-neutral';
-      const scoreStr = (s >= 0 ? '+' : '') + s.toFixed(4);
-      return `<div class="hl-card">
-        <div class="hl-score-box ${boxC}">${scoreStr}</div>
-        <div class="hl-body">
-          <div class="hl-title">${h.title||'No title'}</div>
-          <div class="hl-meta">
-            <span class="hl-source">${h.source||'unknown'}</span>
-            <span class="hl-label ${lblC}">${label}</span>
-            ${h.link?`<a class="hl-link" href="${h.link}" target="_blank" rel="noopener">Read →</a>`:''}
-          </div>
+      <!-- Visual slider showing where sentiment sits on the scale -->
+      <div class="meter-card">
+        <div class="meter-title">Sentiment Meter</div>
+        <div class="meter-big" id="meter-val">—</div>
+        <div class="meter-track">
+          <div class="meter-thumb" id="meter-thumb" style="left: 50%;"></div>
         </div>
-      </div>`;
-    }).join('');
+        <div class="meter-labels">
+          <span>−1 Bearish</span>
+          <span>0 Neutral</span>
+          <span>+1 Bullish</span>
+        </div>
+      </div>
 
-    sta.textContent = 'Last fetched at ' + new Date().toLocaleTimeString();
-  }catch(e){
-    sta.textContent = 'Error: ' + e.message;
-  }finally{
-    btn.disabled=false; spin.style.display='none';
-  }
-}
-</script>
+    </div>
+
+    <!-- Fetch button - triggers API call to get live headlines -->
+    <div class="refresh-row">
+      <button class="btn-refresh" id="btn-fetch" onclick="loadSentiment()">
+        Fetch Headlines
+      </button>
+      <div class="spinner" id="spinner"></div>
+      <span class="ref-status" id="fetch-status">Click to fetch live headlines</span>
+    </div>
+
+    <!-- Headlines list - populated by JS -->
+    <div class="section-label">Headlines &amp; Scores</div>
+    <div id="headlines-wrap">
+      <div class="empty-state">Click "Fetch Headlines" to load live financial news.</div>
+    </div>
+
+  </main>
+
+  <script>
+    const API   = '/api';
+    const TOKEN = localStorage.getItem('fc_token');
+
+    if (!TOKEN) location.href = 'index.html';
+
+    try {
+      const user = JSON.parse(localStorage.getItem('fc_user') || '{}');
+      document.getElementById('nav-user').textContent = user.username || '';
+    } catch {}
+
+    function logout() {
+      localStorage.removeItem('fc_token');
+      localStorage.removeItem('fc_user');
+      location.href = 'index.html';
+    }
+
+    function authHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + TOKEN
+      };
+    }
+
+    function fmt(n, dp = 4) {
+      return n != null && !isNaN(n) ? Number(n).toFixed(dp) : '—';
+    }
+
+    // Move the sentiment meter thumb to reflect the current score (-1 to +1)
+    function updateMeter(score) {
+      const clamped = Math.max(-1, Math.min(1, score));
+      const pct     = ((clamped + 1) / 2) * 100;
+
+      document.getElementById('meter-thumb').style.left = pct + '%';
+
+      const valEl = document.getElementById('meter-val');
+      valEl.textContent = (clamped >= 0 ? '+' : '') + clamped.toFixed(4);
+      valEl.style.color = clamped > 0.05 ? 'var(--accent)' : clamped < -0.05 ? 'var(--danger)' : 'var(--muted)';
+    }
+
+    // Fetch headlines from the sentiment API and render them
+    async function loadSentiment() {
+      const btn    = document.getElementById('btn-fetch');
+      const spin   = document.getElementById('spinner');
+      const status = document.getElementById('fetch-status');
+
+      btn.disabled = true;
+      spin.style.display = 'inline-block';
+      status.textContent = 'Fetching and scoring headlines…';
+
+      try {
+        const response = await fetch(`${API}/sentiment/live?max=15`, {
+          headers: authHeaders()
+        });
+
+        if (response.status === 401) { location.href = 'index.html'; return; }
+
+        const data = await response.json();
+
+        // Handle API-level errors
+        if (!response.ok || data.error) {
+          status.textContent = data.error || 'Failed to fetch headlines';
+          document.getElementById('headlines-wrap').innerHTML =
+            `<div class="empty-state">${data.error || 'No headlines available right now.'}</div>`;
+          return;
+        }
+
+        // Update the summary stats
+        const scoreEl = document.getElementById('mean-score');
+        scoreEl.textContent = (data.mean_score >= 0 ? '+' : '') + fmt(data.mean_score, 4);
+        scoreEl.style.color = data.mean_score > 0.05 ? 'var(--accent)' : data.mean_score < -0.05 ? 'var(--danger)' : 'var(--text)';
+
+        document.getElementById('hl-count').textContent = data.count || data.headlines?.length || 0;
+
+        updateMeter(data.mean_score);
+
+        // Render the individual headline cards
+        const items = data.headlines || [];
+
+        if (!items.length) {
+          document.getElementById('headlines-wrap').innerHTML =
+            '<div class="empty-state">No headlines returned.</div>';
+          return;
+        }
+
+        document.getElementById('headlines-wrap').innerHTML = items.map(h => {
+          const label = h.label || 'neutral';
+          const score = h.sentiment || 0;
+
+          // Pick box colour class based on sentiment label
+          const boxClass = label === 'positive' ? 'pos-box' : label === 'negative' ? 'neg-box' : 'neu-box';
+          const lblClass = label === 'positive' ? 'lbl-positive' : label === 'negative' ? 'lbl-negative' : 'lbl-neutral';
+          const scoreStr = (score >= 0 ? '+' : '') + score.toFixed(4);
+
+          return `<div class="hl-card">
+            <div class="hl-score-box ${boxClass}">${scoreStr}</div>
+            <div class="hl-body">
+              <div class="hl-title">${h.title || 'No title'}</div>
+              <div class="hl-meta">
+                <span class="hl-source">${h.source || 'unknown'}</span>
+                <span class="hl-label ${lblClass}">${label}</span>
+                ${h.link ? `<a class="hl-link" href="${h.link}" target="_blank" rel="noopener">Read →</a>` : ''}
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+
+        status.textContent = 'Last fetched at ' + new Date().toLocaleTimeString();
+
+      } catch (err) {
+        status.textContent = 'Error: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        spin.style.display = 'none';
+      }
+    }
+  </script>
+
 </body>
 </html>

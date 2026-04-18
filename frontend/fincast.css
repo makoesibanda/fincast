@@ -1,0 +1,405 @@
+/*
+ * fincast.css - shared styles for all pages
+ * FinCast: Intelligent Engine for Financial Forecasting
+ * Simon M Sibanda | Goldsmiths, University of London
+ */
+
+/* ── Reset ─────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Design tokens ──────────────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg:       #060810;
+  --surface:  #0d1117;
+  --surface2: #131920;
+
+  /* Borders */
+  --border:  #1e2630;
+  --border2: #1a2230;
+
+  /* Brand colours */
+  --accent:  #00d4aa;   /* teal - primary action / positive */
+  --accent2: #0ea5e9;   /* blue - secondary */
+  --danger:  #f43f5e;   /* red  - negative / down */
+  --warn:    #f59e0b;   /* amber - caution / disclaimer */
+
+  /* Text */
+  --text:    #e8edf2;
+  --muted:   #6b7a8d;
+  --muted2:  #4a5568;
+
+  /* Spacing helpers */
+  --radius:    10px;
+  --radius-lg: 14px;
+}
+
+/* ── Base body ──────────────────────────────────────────────────────── */
+* {
+  font-family: 'DM Sans', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* Subtle grid pattern behind everything */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 170, .02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 170, .02) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Disclaimer bar ─────────────────────────────────────────────────── */
+.disclaimer {
+  background: rgba(245, 158, 11, .08);
+  border-bottom: 1px solid rgba(245, 158, 11, .2);
+  padding: .5rem 2rem;
+  font-size: .78rem;
+  color: var(--warn);
+  text-align: center;
+  position: relative;
+  z-index: 101;
+}
+
+/* ── Navigation ─────────────────────────────────────────────────────── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 58px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(6, 8, 16, .9);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'Space Mono', monospace;
+  font-size: .95rem;
+  color: var(--accent);
+}
+
+.logo span {
+  color: var(--text);
+  opacity: .4;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: .85rem;
+  transition: color .15s;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--text);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.nav-user {
+  font-size: .8rem;
+  color: var(--muted);
+  font-family: 'Space Mono', monospace;
+}
+
+/* Small button used in nav and elsewhere */
+.btn-sm {
+  padding: .3rem .8rem;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: .8rem;
+  transition: all .15s;
+}
+
+.btn-sm:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* ── Main content wrapper ───────────────────────────────────────────── */
+main {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 2rem 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Section label (small uppercase header above sections) ──────────── */
+.section-label {
+  font-size: .72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: 1rem;
+  font-family: 'Space Mono', monospace;
+}
+
+/* ── Metric cards ───────────────────────────────────────────────────── */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.metric {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.3rem 1.5rem;
+  transition: border-color .2s;
+}
+
+.metric:hover {
+  border-color: var(--border2);
+}
+
+.m-label {
+  font-size: .72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: .4rem;
+}
+
+.m-val {
+  font-size: 1.75rem;
+  font-weight: 600;
+  font-family: 'Space Mono', monospace;
+  line-height: 1;
+}
+
+.m-sub {
+  font-size: .78rem;
+  color: var(--muted);
+  margin-top: .35rem;
+}
+
+/* Colour helpers for up/down/neutral values */
+.up      { color: var(--accent); }
+.down    { color: var(--danger); }
+.neutral { color: var(--text);   }
+
+/* ── Info cards (key-value pairs) ───────────────────────────────────── */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.3rem 1.5rem;
+}
+
+.ic-title {
+  font-size: .75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: .9rem;
+  font-family: 'Space Mono', monospace;
+}
+
+/* Each key-value row inside an info card */
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .35rem 0;
+  border-bottom: 1px solid var(--border2);
+  font-size: .875rem;
+}
+
+.kv:last-child {
+  border-bottom: none;
+}
+
+.kv-k {
+  color: var(--muted);
+}
+
+.kv-v {
+  font-weight: 500;
+  font-family: 'Space Mono', monospace;
+  font-size: .82rem;
+}
+
+/* ── Direction pills ─────────────────────────────────────────────────── */
+.pill {
+  padding: .15rem .55rem;
+  border-radius: 10px;
+  font-size: .72rem;
+  font-weight: 600;
+}
+
+.pill-up   { background: rgba(0, 212, 170, .12); color: var(--accent); }
+.pill-down { background: rgba(244, 63, 94, .12);  color: var(--danger); }
+
+/* ── Prediction history table ────────────────────────────────────────── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .85rem;
+}
+
+thead th {
+  background: var(--surface2);
+  padding: .7rem 1rem;
+  text-align: left;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+tbody td {
+  padding: .65rem 1rem;
+  border-bottom: 1px solid var(--border2);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background: var(--surface2);
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 2rem;
+}
+
+/* ── Error alert ─────────────────────────────────────────────────────── */
+.alert {
+  padding: .75rem 1rem;
+  border-radius: var(--radius);
+  font-size: .85rem;
+  margin-bottom: 1rem;
+  display: none;
+}
+
+.alert.err {
+  background: rgba(244, 63, 94, .1);
+  border: 1px solid rgba(244, 63, 94, .25);
+  color: var(--danger);
+}
+
+/* ── Loading spinner ─────────────────────────────────────────────────── */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, .2);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  display: none;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Confidence gauge ────────────────────────────────────────────────── */
+.gauge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: none;
+  background: none;
+}
+
+.gauge-svg {
+  width: 180px;
+  height: 100px;
+}
+
+.gauge-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.gauge-label {
+  font-size: .78rem;
+  color: var(--muted);
+  margin-top: .1rem;
+}
+
+.signal-strong { color: var(--accent); }
+.signal-mod    { color: var(--warn);   }
+.signal-weak   { color: var(--muted);  }
+
+/* ── Page title block ────────────────────────────────────────────────── */
+.page-title {
+  margin-bottom: 1.75rem;
+}
+
+.page-title h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: .3rem;
+}
+
+.page-title p {
+  color: var(--muted);
+  font-size: .88rem;
+}

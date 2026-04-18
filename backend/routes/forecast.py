@@ -91,3 +91,35 @@ def model_stats():
         'best_sharpe':    2.612,
         'best_dir_acc':   54.19,
     }), 200
+@forecast_bp.route('/history_chart', methods=['GET'])
+@login_required
+def history_chart():
+    # Fetches historical close prices for the chart on the dashboard (FR2)
+    ticker = request.args.get('ticker', 'BTC-USD').upper()
+    days   = min(int(request.args.get('days', 60)), 365)
+
+    try:
+        import yfinance as yf
+        from datetime import datetime, timedelta
+
+        end   = datetime.today()
+        start = end - timedelta(days=days)
+
+        raw = yf.download(ticker, start=start.strftime('%Y-%m-%d'),
+                          end=end.strftime('%Y-%m-%d'), progress=False)
+
+        if raw.empty:
+            return jsonify({'dates': [], 'prices': []}), 200
+
+        # Flatten MultiIndex columns if present
+        if hasattr(raw.columns, 'levels'):
+            raw.columns = [c[0] if isinstance(c, tuple) else c for c in raw.columns]
+
+        dates  = [str(d.date()) for d in raw.index]
+        prices = [round(float(p), 2) for p in raw['Close']]
+
+        return jsonify({'dates': dates, 'prices': prices, 'ticker': ticker}), 200
+
+    except Exception as e:
+        current_app.logger.error('Chart data error: %s', e)
+        return jsonify({'dates': [], 'prices': [], 'error': str(e)}), 200

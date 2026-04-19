@@ -11,8 +11,6 @@
   <link rel="stylesheet" href="fincast.css" />
 
   <style>
-    /* ── Models page specific styles ────────────────────────────────── */
-
     /* Top summary stat cards */
     .summary-grid {
       display: grid;
@@ -48,7 +46,7 @@
       margin-top: .25rem;
     }
 
-    /* Horizontal bar chart panel */
+    /* Horizontal bar chart panels */
     .chart-section {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -100,7 +98,7 @@
       transition: width .6s ease;
     }
 
-    /* Value shown at the right end of each bar */
+    /* Value label at the right end of each bar */
     .bar-num {
       font-size: .75rem;
       font-family: 'Space Mono', monospace;
@@ -112,30 +110,17 @@
       color: var(--text);
     }
 
-    /* Results table overrides */
-    .table-wrap {
-      margin-bottom: 1.5rem;
-    }
+    .table-wrap { margin-bottom: 1.5rem; }
 
-    thead th.num {
-      text-align: right;
-    }
+    thead th.num { text-align: right; }
+    tbody td.name { font-family: 'DM Sans', sans-serif; font-size: .85rem; }
+    tbody td.num  { text-align: right; }
 
-    tbody td.name {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .85rem;
-    }
-
-    tbody td.num {
-      text-align: right;
-    }
-
-    /* Highlight row for the best performing model */
+    /* Highlight the best-performing model row */
     tbody tr.best-row td {
       background: rgba(0, 212, 170, .05);
     }
 
-    /* Small inline tags on model names */
     .tag {
       padding: .1rem .45rem;
       border-radius: 6px;
@@ -148,7 +133,7 @@
     .tag-best    { background: rgba(0, 212, 170, .15); color: var(--accent); }
     .tag-primary { background: rgba(14, 165, 233, .15); color: #0ea5e9; }
 
-    /* Walk-forward validation 3-column grid */
+    /* Walk-forward validation 3-window grid */
     .wf-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -156,9 +141,7 @@
       margin-bottom: 1.5rem;
     }
 
-    @media (max-width: 600px) {
-      .wf-grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 600px) { .wf-grid { grid-template-columns: 1fr; } }
 
     .wf-card {
       background: var(--surface);
@@ -183,13 +166,9 @@
       font-family: 'Space Mono', monospace;
     }
 
-    .wf-meta {
-      font-size: .78rem;
-      color: var(--muted);
-      margin-top: .3rem;
-    }
+    .wf-meta { font-size: .78rem; color: var(--muted); margin-top: .3rem; }
 
-    /* SHAP importance section */
+    /* SHAP feature importance section */
     .shap-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -197,9 +176,7 @@
       margin-bottom: 2rem;
     }
 
-    @media (max-width: 600px) {
-      .shap-grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 600px) { .shap-grid { grid-template-columns: 1fr; } }
 
     .shap-card {
       background: var(--surface);
@@ -232,11 +209,7 @@
       flex-shrink: 0;
     }
 
-    .shap-feat {
-      font-size: .82rem;
-      width: 140px;
-      flex-shrink: 0;
-    }
+    .shap-feat { font-size: .82rem; width: 140px; flex-shrink: 0; }
 
     .shap-bar-track {
       flex: 1;
@@ -258,7 +231,6 @@
       line-height: 1.6;
     }
 
-    /* Key-value rows used in SHAP sentiment card */
     .shap-kv {
       display: flex;
       justify-content: space-between;
@@ -267,14 +239,10 @@
       font-size: .85rem;
     }
 
-    .shap-kv:last-of-type {
-      border-bottom: none;
-    }
-
+    .shap-kv:last-of-type { border-bottom: none; }
     .shap-kv-k { color: var(--muted); }
     .shap-kv-v { font-family: 'Space Mono', monospace; }
 
-    /* Inline note text */
     .note-text {
       font-size: .82rem;
       color: var(--muted);
@@ -313,7 +281,6 @@
       <p>Full evaluation results from the v2 notebook — test set 2024 (held-out). All metrics computed on data the models never saw during training.</p>
     </div>
 
-    <!-- Top-level summary numbers -->
     <div class="section-label">Best Results — Test Set 2024</div>
     <div class="summary-grid">
       <div class="sum-card">
@@ -348,19 +315,17 @@
       </div>
     </div>
 
-    <!-- Sharpe ratio bar chart (built by JS below) -->
+    <!-- Sharpe and accuracy bar charts built by JS below -->
     <div class="chart-section">
       <div class="chart-title">Sharpe Ratio — Test Set 2024</div>
       <div id="sharpe-chart"></div>
     </div>
 
-    <!-- Directional accuracy bar chart (built by JS below) -->
     <div class="chart-section">
       <div class="chart-title">Directional Accuracy — Test Set 2024</div>
       <div id="diracc-chart"></div>
     </div>
 
-    <!-- Full results table -->
     <div class="section-label">Full Results Table</div>
     <div class="table-wrap">
       <table>
@@ -378,7 +343,7 @@
       </table>
     </div>
 
-    <!-- Walk-forward validation results - 3 time windows -->
+    <!-- Walk-forward validation over 3 × 90-day windows in 2024 -->
     <div class="section-label">Walk-Forward Validation — 3 × 90-day Windows (2024)</div>
     <div class="wf-grid">
       <div class="wf-card">
@@ -403,11 +368,9 @@
       The model is regime-sensitive, which is an acknowledged limitation and area for future work.
     </p>
 
-    <!-- SHAP feature importance -->
     <div class="section-label">SHAP Feature Importance (GradientExplainer)</div>
     <div class="shap-grid">
 
-      <!-- Top 5 features by mean |SHAP| value -->
       <div class="shap-card">
         <div class="shap-title">Top 5 Features by Mean |SHAP|</div>
         <div id="shap-bars"></div>
@@ -417,7 +380,6 @@
         </p>
       </div>
 
-      <!-- Sentiment feature SHAP breakdown -->
       <div class="shap-card">
         <div class="shap-title">Sentiment Feature Analysis</div>
         <div class="shap-kv">
@@ -441,7 +403,6 @@
 
     </div>
 
-    <!-- HFM ensemble experiment table -->
     <div class="section-label">Hybrid Fusion Model (HFM) — Ensemble Experiment</div>
     <div class="table-wrap" style="margin-bottom: 2rem;">
       <table>
@@ -516,8 +477,7 @@
       location.href = 'index.html';
     }
 
-    // ── Model results data (from notebook v2 test set 2024) ──────────
-
+    // Model results from the v2 notebook test set (2024 held-out data)
     const MODELS = [
       { name: 'Linear Regression', sharpe:  1.171, dir_acc: 53.30, max_dd: -33.70, mae: 2.0212, hit_rate: 53.20 },
       { name: 'Random Forest',     sharpe:  0.495, dir_acc: 48.90, max_dd: -44.70, mae: 2.0887, hit_rate: 48.80 },
@@ -531,7 +491,7 @@
       { name: 'HFM (Fusion)',      sharpe:  2.209, dir_acc: 52.40, max_dd: -18.10, mae: 2.0313, hit_rate: 52.30 },
     ];
 
-    // SHAP top 5 features by relative importance (normalised to 100)
+    // SHAP top 5 features normalised to 100 for the bar chart
     const SHAP_FEATURES = [
       { feat: 'Volume_Change', pct: 100 },
       { feat: 'MACD_Signal',   pct: 88  },
@@ -540,14 +500,13 @@
       { feat: 'RSI_14',        pct: 54  },
     ];
 
-    // ── Build Sharpe bar chart ────────────────────────────────────────
-
     function buildSharpeChart() {
-      const maxAbsSharpe = Math.max(...MODELS.map(m => Math.abs(m.sharpe)));
-      const sorted = [...MODELS].sort((a, b) => a.sharpe - b.sharpe);
+      // Sort lowest to highest so the best model appears at the bottom
+      const maxAbs  = Math.max(...MODELS.map(m => Math.abs(m.sharpe)));
+      const sorted  = [...MODELS].sort((a, b) => a.sharpe - b.sharpe);
 
       document.getElementById('sharpe-chart').innerHTML = sorted.map(m => {
-        const pct   = Math.abs(m.sharpe) / maxAbsSharpe * 100;
+        const pct   = Math.abs(m.sharpe) / maxAbs * 100;
         const color = m.sharpe < 0 ? 'var(--danger)' : m.best ? 'var(--accent)' : '#0ea5e9';
 
         return `<div class="bar-row">
@@ -560,12 +519,11 @@
       }).join('');
     }
 
-    // ── Build Directional Accuracy bar chart ─────────────────────────
-
     function buildDirAccChart() {
       const sorted = [...MODELS].sort((a, b) => a.dir_acc - b.dir_acc);
 
       document.getElementById('diracc-chart').innerHTML = sorted.map(m => {
+        // Scale bar against 60% max so differences are visible
         const pct   = (m.dir_acc / 60) * 100;
         const color = m.best ? 'var(--accent)' : m.dir_acc >= 52 ? '#0ea5e9' : 'var(--muted2)';
 
@@ -578,8 +536,6 @@
         </div>`;
       }).join('');
     }
-
-    // ── Build full results table ──────────────────────────────────────
 
     function buildTable() {
       document.getElementById('results-table').innerHTML = MODELS.map(m => {
@@ -598,8 +554,6 @@
       }).join('');
     }
 
-    // ── Build SHAP feature importance bars ───────────────────────────
-
     function buildShapBars() {
       document.getElementById('shap-bars').innerHTML = SHAP_FEATURES.map((s, i) => `
         <div class="shap-row">
@@ -611,7 +565,7 @@
         </div>`).join('');
     }
 
-    // Build everything on page load
+    // Build all charts and tables when the page loads
     buildSharpeChart();
     buildDirAccChart();
     buildTable();

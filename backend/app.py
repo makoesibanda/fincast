@@ -3,20 +3,28 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 from config import Config
 from database import db
+
+# Route blueprints — each handles a different section of the API
 from routes.auth      import auth_bp
 from routes.forecast  import forecast_bp
 from routes.sentiment import sentiment_bp
 from routes.admin     import admin_bp
 
+# Path to the frontend folder so Flask can serve the HTML files
 FRONTEND = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 
+
 def create_app(cfg=Config):
+    # Creates and configures the Flask application.
+    # Using an app factory so the same setup can be used for both
+    # running the server and deploying via wsgi.py.
     app = Flask(__name__, static_folder=None)
     app.config.from_object(cfg)
 
     CORS(app)
     db.init_app(app)
 
+    # Register all API blueprints under their respective URL prefixes
     app.register_blueprint(auth_bp,      url_prefix='/api/auth')
     app.register_blueprint(forecast_bp,  url_prefix='/api/forecast')
     app.register_blueprint(sentiment_bp, url_prefix='/api/sentiment')
@@ -28,12 +36,14 @@ def create_app(cfg=Config):
 
     @app.route('/<path:filename>')
     def frontend(filename):
+        # Serve any other file from the frontend folder (HTML, CSS, JS)
         return send_from_directory(FRONTEND, filename)
 
     with app.app_context():
         db.create_all()
 
     return app
+
 
 if __name__ == '__main__':
     app = create_app()

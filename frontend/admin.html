@@ -11,9 +11,7 @@
   <link rel="stylesheet" href="fincast.css" />
 
   <style>
-    /* ── Admin page specific styles ─────────────────────────────────── */
-
-    /* Admin badge next to logo */
+    /* Admin badge next to the logo */
     .admin-badge {
       font-size: .68rem;
       background: rgba(245, 158, 11, .15);
@@ -25,7 +23,6 @@
       font-family: 'Space Mono', monospace;
     }
 
-    /* Nav link used in admin (plain anchor style) */
     .nav-link {
       color: var(--muted);
       text-decoration: none;
@@ -64,13 +61,9 @@
       font-family: 'Space Mono', monospace;
     }
 
-    .s-sub {
-      font-size: .76rem;
-      color: var(--muted);
-      margin-top: .25rem;
-    }
+    .s-sub { font-size: .76rem; color: var(--muted); margin-top: .25rem; }
 
-    /* Tab switcher between Users and Predictions panels */
+    /* Tab switcher between Users and Predictions */
     .tabs {
       display: flex;
       gap: .5rem;
@@ -95,18 +88,10 @@
       font-weight: 600;
     }
 
-    /* Table overrides for admin - monospace cells */
-    tbody td {
-      font-family: 'Space Mono', monospace;
-      font-size: .8rem;
-    }
+    tbody td { font-family: 'Space Mono', monospace; font-size: .8rem; }
+    tbody td.name { font-family: 'DM Sans', sans-serif; font-size: .85rem; }
 
-    tbody td.name {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .85rem;
-    }
-
-    /* Status pills for users and predictions */
+    /* Status and role pills */
     .pill {
       padding: .12rem .5rem;
       border-radius: 8px;
@@ -115,14 +100,14 @@
       font-family: 'DM Sans', sans-serif;
     }
 
-    .pill-active   { background: rgba(0, 212, 170, .12); color: var(--accent); }
-    .pill-inactive { background: rgba(244, 63, 94, .12);  color: var(--danger); }
-    .pill-admin    { background: rgba(14, 165, 233, .12); color: #0ea5e9; }
+    .pill-active   { background: rgba(0, 212, 170, .12);  color: var(--accent); }
+    .pill-inactive { background: rgba(244, 63, 94, .12);   color: var(--danger); }
+    .pill-admin    { background: rgba(14, 165, 233, .12);  color: #0ea5e9; }
     .pill-user     { background: rgba(107, 122, 141, .12); color: var(--muted); }
-    .pill-up       { background: rgba(0, 212, 170, .12); color: var(--accent); }
-    .pill-down     { background: rgba(244, 63, 94, .12);  color: var(--danger); }
+    .pill-up       { background: rgba(0, 212, 170, .12);   color: var(--accent); }
+    .pill-down     { background: rgba(244, 63, 94, .12);   color: var(--danger); }
 
-    /* Activate / Deactivate toggle button on user rows */
+    /* Toggle button to activate or deactivate a user */
     .btn-toggle {
       padding: .2rem .6rem;
       font-size: .75rem;
@@ -134,12 +119,9 @@
       transition: all .15s;
     }
 
-    .btn-toggle:hover {
-      border-color: var(--danger);
-      color: var(--danger);
-    }
+    .btn-toggle:hover { border-color: var(--danger); color: var(--danger); }
 
-    /* Pagination bar at the bottom of the predictions table */
+    /* Pagination controls at the bottom of the predictions table */
     .pagination {
       display: flex;
       justify-content: flex-end;
@@ -168,21 +150,14 @@
       font-size: .8rem;
     }
 
-    .btn-page:hover:not(:disabled) {
-      border-color: var(--accent);
-      color: var(--text);
-    }
-
-    .btn-page:disabled {
-      opacity: .35;
-      cursor: not-allowed;
-    }
+    .btn-page:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+    .btn-page:disabled { opacity: .35; cursor: not-allowed; }
   </style>
 </head>
 <body>
 
   <nav>
-    <!-- Logo with admin badge to make it clear this is a restricted page -->
+    <!-- Logo with admin badge so it's clear this is a restricted page -->
     <div style="display: flex; align-items: center;">
       <span class="logo">Fin<span>Cast</span></span>
       <span class="admin-badge">ADMIN</span>
@@ -196,10 +171,9 @@
 
   <main>
 
-    <!-- Error alert - shown if API calls fail or user doesn't have admin access -->
+    <!-- Error shown if the user doesn't have admin access or an API call fails -->
     <div class="alert err" id="err-alert"></div>
 
-    <!-- System overview cards -->
     <div class="section-label">System Overview</div>
     <div class="stats-grid">
       <div class="s-card">
@@ -219,25 +193,19 @@
       </div>
     </div>
 
-    <!-- Tab switcher -->
     <div class="tabs">
       <button class="tab active" id="tab-users" onclick="showTab('users')">Users</button>
       <button class="tab"        id="tab-preds" onclick="showTab('preds')">Predictions</button>
     </div>
 
-    <!-- Users panel -->
+    <!-- Users table -->
     <div id="panel-users">
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Joined</th>
-              <th>Action</th>
+              <th>ID</th><th>Username</th><th>Email</th><th>Role</th>
+              <th>Status</th><th>Joined</th><th>Action</th>
             </tr>
           </thead>
           <tbody id="users-body">
@@ -247,22 +215,15 @@
       </div>
     </div>
 
-    <!-- Predictions panel (hidden by default) -->
+    <!-- Predictions table — hidden until the tab is clicked -->
     <div id="panel-preds" style="display: none;">
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>User</th>
-              <th>Ticker</th>
-              <th>Current</th>
-              <th>Predicted</th>
-              <th>Return</th>
-              <th>Dir</th>
-              <th>Conf</th>
-              <th>Sentiment</th>
-              <th>Date</th>
+              <th>ID</th><th>User</th><th>Ticker</th><th>Current</th>
+              <th>Predicted</th><th>Return</th><th>Dir</th><th>Conf</th>
+              <th>Sentiment</th><th>Date</th>
             </tr>
           </thead>
           <tbody id="preds-body">
@@ -285,14 +246,10 @@
 
     if (!TOKEN) location.href = 'index.html';
 
-    // Track which page of predictions we're on
     let currentPage = 1;
 
     function authHeaders() {
-      return {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + TOKEN
-      };
+      return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
     }
 
     function logout() {
@@ -303,7 +260,7 @@
 
     function showError(msg) {
       const el = document.getElementById('err-alert');
-      el.textContent = msg;
+      el.textContent  = msg;
       el.style.display = msg ? 'block' : 'none';
     }
 
@@ -317,18 +274,16 @@
       return n != null ? (n >= 0 ? '+' : '') + fmt(n, 4) + '%' : '—';
     }
 
-    // Toggle between Users and Predictions tabs
     function showTab(tab) {
+      // Toggle panel visibility and active tab highlight
       document.getElementById('panel-users').style.display = tab === 'users' ? '' : 'none';
       document.getElementById('panel-preds').style.display = tab === 'preds' ? '' : 'none';
       document.getElementById('tab-users').classList.toggle('active', tab === 'users');
       document.getElementById('tab-preds').classList.toggle('active', tab === 'preds');
 
-      // Only load predictions when the tab is opened
+      // Only load predictions data when the tab is first opened
       if (tab === 'preds') loadPredictions(1);
     }
-
-    // ── Load system stats ────────────────────────────────────────────
 
     async function loadStats() {
       const response = await fetch(`${API}/admin/stats`, { headers: authHeaders() });
@@ -350,15 +305,10 @@
       document.getElementById('stat-conf').textContent = avgConf != null ? fmt(avgConf * 100, 1) + '%' : '—';
     }
 
-    // ── Load and render users table ──────────────────────────────────
-
     async function loadUsers() {
       const response = await fetch(`${API}/admin/users`, { headers: authHeaders() });
 
-      if (!response.ok) {
-        showError('Could not load users');
-        return;
-      }
+      if (!response.ok) { showError('Could not load users'); return; }
 
       const users = await response.json();
       const tbody = document.getElementById('users-body');
@@ -383,12 +333,12 @@
       </tr>`).join('');
     }
 
-    // Toggle a user's active status
     async function toggleUser(userId, activate) {
+      // Flip the user's active status and refresh both the table and stats
       const response = await fetch(`${API}/admin/users/${userId}`, {
-        method: 'PATCH',
+        method:  'PATCH',
         headers: authHeaders(),
-        body: JSON.stringify({ is_active: activate })
+        body:    JSON.stringify({ is_active: activate })
       });
 
       if (!response.ok) {
@@ -397,12 +347,9 @@
         return;
       }
 
-      // Refresh both table and stats after change
       await loadUsers();
       await loadStats();
     }
-
-    // ── Load and render predictions table ────────────────────────────
 
     async function loadPredictions(page) {
       currentPage = page;
@@ -411,10 +358,7 @@
         headers: authHeaders()
       });
 
-      if (!response.ok) {
-        showError('Could not load predictions');
-        return;
-      }
+      if (!response.ok) { showError('Could not load predictions'); return; }
 
       const data = await response.json();
 
@@ -448,7 +392,7 @@
       }).join('');
     }
 
-    // Load stats and users on page open
+    // Load stats and users when the page opens
     (async () => {
       await loadStats();
       await loadUsers();

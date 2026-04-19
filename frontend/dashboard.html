@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- Chart.js for the historical price chart (FR2) -->
+  <!-- Chart.js for the 60-day historical price chart (FR2) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <link rel="stylesheet" href="fincast.css" />
@@ -81,10 +81,7 @@
       font-family: 'Space Mono', monospace;
     }
 
-    .chart-range {
-      font-size: .75rem;
-      color: var(--muted);
-    }
+    .chart-range { font-size: .75rem; color: var(--muted); }
 
     .chart-wrap {
       position: relative;
@@ -96,15 +93,6 @@
       color: var(--muted);
       font-size: .85rem;
       padding: 3rem 0;
-    }
-
-    .section-title {
-      font-size: .75rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      margin-bottom: 1rem;
-      font-family: 'Space Mono', monospace;
     }
 
     /* Plain language explanation panel */
@@ -226,11 +214,20 @@
       color: var(--danger);
       font-size: .88rem;
     }
+
+    .section-title {
+      font-size: .75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 1rem;
+      font-family: 'Space Mono', monospace;
+    }
   </style>
 </head>
 <body>
 
-  <!-- NFR5 disclaimer - required on every page -->
+  <!-- Ethical use disclaimer — NFR5 requirement, must appear on every page -->
   <div class="disclaimer">
     ⚠️ For educational and decision-support purposes only. This is not financial advice. Past performance does not guarantee future results.
   </div>
@@ -264,10 +261,7 @@
       <span class="status" id="status-text">BTC-USD · Hybrid Fusion Model (GRU 90% + TF 10%)</span>
     </div>
 
-    <!-- FR2: Historical Market Context -->
-    <!-- Loads the last 60 days of BTC price automatically on page    -->
-    <!-- open so the user understands recent market behaviour before  -->
-    <!-- viewing the forecast. Satisfies FR2 from the design doc.     -->
+    <!-- 60-day price chart — gives the user market context before the forecast (FR2) -->
     <div class="chart-panel">
       <div class="chart-header">
         <h3>Historical Price Context — BTC-USD</h3>
@@ -294,6 +288,7 @@
         <div class="m-sub" id="metric-return">est. return</div>
       </div>
 
+      <!-- Confidence gauge — animates after each prediction -->
       <div class="metric" style="display: flex; flex-direction: column; gap: .5rem;">
         <div class="m-label">Direction &amp; Confidence</div>
         <div class="gauge-wrap">
@@ -320,62 +315,49 @@
 
     </div>
 
-    <!-- Detail cards -->
+    <!-- Two info cards: latest forecast details and reliability info -->
     <div class="info-grid">
 
+      <!-- Latest forecast shown in readable terms -->
       <div class="info-card">
-        <div class="ic-title">Latest Inference</div>
-        <div class="kv"><span class="kv-k">Ticker</span>          <span class="kv-v" id="detail-ticker">—</span></div>
-        <div class="kv"><span class="kv-k">Predicted return</span><span class="kv-v" id="detail-return">—</span></div>
-        <div class="kv"><span class="kv-k">Direction</span>       <span class="kv-v" id="detail-direction">—</span></div>
-        <div class="kv"><span class="kv-k">Confidence</span>      <span class="kv-v" id="detail-confidence">—</span></div>
-        <div class="kv"><span class="kv-k">Sentiment score</span> <span class="kv-v" id="detail-sentiment">—</span></div>
-        <div class="kv"><span class="kv-k">Timestamp (UTC)</span> <span class="kv-v" id="detail-timestamp" style="font-size: .72rem;">—</span></div>
+        <div class="ic-title">Your Latest Forecast</div>
+        <div class="kv"><span class="kv-k">Instrument</span>          <span class="kv-v" id="detail-ticker">—</span></div>
+        <div class="kv"><span class="kv-k">Direction</span>           <span class="kv-v" id="detail-direction">—</span></div>
+        <div class="kv"><span class="kv-k">Confidence</span>          <span class="kv-v" id="detail-confidence">—</span></div>
+        <div class="kv"><span class="kv-k">News sentiment</span>      <span class="kv-v" id="detail-sentiment">—</span></div>
+        <div class="kv"><span class="kv-k">Forecast time (UTC)</span> <span class="kv-v" id="detail-timestamp" style="font-size: .72rem;">—</span></div>
       </div>
 
+      <!-- How reliable is this — written for non-technical users -->
       <div class="info-card">
-        <div class="ic-title">Model Architecture</div>
-        <div class="kv"><span class="kv-k">Primary</span>    <span class="kv-v">GRU (weight 0.9)</span></div>
-        <div class="kv"><span class="kv-k">Secondary</span>  <span class="kv-v">Transformer (0.1)</span></div>
-        <div class="kv"><span class="kv-k">GRU config</span> <span class="kv-v">hidden=128, layers=2</span></div>
-        <div class="kv"><span class="kv-k">Input shape</span><span class="kv-v">(1, 30, 19)</span></div>
-        <div class="kv"><span class="kv-k">Features</span>   <span class="kv-v">19 (v2)</span></div>
-        <div class="kv"><span class="kv-k">Loss</span>       <span class="kv-v">0.25×MSE + 0.75×BCE</span></div>
-      </div>
-
-      <div class="info-card">
-        <div class="ic-title">Test Set Performance (2024)</div>
+        <div class="ic-title">How Reliable Is This?</div>
         <div class="kv">
-          <span class="kv-k">GRU Sharpe</span>
-          <span class="kv-v" style="color: var(--accent);">2.612</span>
+          <span class="kv-k">Correct direction</span>
+          <span class="kv-v" style="color: var(--accent);">54.19% of the time</span>
         </div>
-        <div class="kv"><span class="kv-k">Directional acc.</span><span class="kv-v">54.19%</span></div>
         <div class="kv">
-          <span class="kv-k">Max drawdown</span>
+          <span class="kv-k">Tested on</span>
+          <span class="kv-v">Full year 2024 data</span>
+        </div>
+        <div class="kv">
+          <span class="kv-k">Risk-adjusted return</span>
+          <span class="kv-v" style="color: var(--accent);">2.612 Sharpe — good</span>
+        </div>
+        <div class="kv">
+          <span class="kv-k">Worst losing run</span>
           <span class="kv-v" style="color: var(--danger);">−18.10%</span>
         </div>
-        <div class="kv"><span class="kv-k">HFM Sharpe</span><span class="kv-v">2.209</span></div>
         <div class="kv">
-          <span class="kv-k">Walk-fwd mean Sharpe</span>
-          <span class="kv-v" style="color: var(--accent);">1.812</span>
+          <span class="kv-k">Remember</span>
+          <span class="kv-v" style="color: var(--warn);">Not financial advice</span>
         </div>
-        <div class="kv"><span class="kv-k">SHAP top feature</span><span class="kv-v">Volume_Change</span></div>
-      </div>
-
-      <div class="info-card">
-        <div class="ic-title">19 Features (v2)</div>
-        <div class="kv"><span class="kv-k">Returns</span>    <span class="kv-v">Return, Log, R3, R7, R14</span></div>
-        <div class="kv"><span class="kv-k">Trend</span>      <span class="kv-v">SMA7, SMA21, EMA_ratio</span></div>
-        <div class="kv"><span class="kv-k">Momentum</span>   <span class="kv-v">MACD, Signal, Hist, RSI</span></div>
-        <div class="kv"><span class="kv-k">Volatility</span> <span class="kv-v">BB_W, BB_P, Vol7, Vol_ratio, ATR</span></div>
-        <div class="kv"><span class="kv-k">Volume</span>     <span class="kv-v">Volume_Change</span></div>
-        <div class="kv"><span class="kv-k">NLP</span>        <span class="kv-v">Sentiment (FinBERT)</span></div>
       </div>
 
     </div>
 
     <!-- Why did the model predict this? -->
-    <!-- Built dynamically from real prediction values — nothing hardcoded -->
+    <!-- Built dynamically from real prediction values every time —
+         direction, confidence, volatility and sentiment all shape the text -->
     <div class="explain-card">
       <div class="ic-title">Why did the model predict this?</div>
       <p class="explain-text" id="explain-text">
@@ -383,9 +365,8 @@
       </p>
     </div>
 
-    <!-- Currency Converter -->
-    <!-- Converts the predicted BTC price from USD into any currency -->
-    <!-- Amount is pre-filled with predicted price after a forecast runs -->
+    <!-- Currency converter — amount pre-fills with the predicted price after a run -->
+    <!-- Uses open.er-api.com free API, no key needed -->
     <div class="converter-card">
       <div class="ic-title">Currency Converter</div>
       <p class="converter-note">
@@ -399,6 +380,7 @@
           <label>Amount (USD)</label>
           <input type="number" id="conv-amount" placeholder="e.g. 75000" min="0" step="any" />
         </div>
+
         <div class="conv-field">
           <label>Convert to</label>
           <select id="conv-currency">
@@ -424,9 +406,11 @@
             <option value="UAH">UAH — Ukrainian Hryvnia</option>
           </select>
         </div>
+
         <button class="btn-convert" id="btn-convert" onclick="convertCurrency()">Convert</button>
       </div>
 
+      <!-- Result shown after conversion completes -->
       <div class="conv-result" id="conv-result">
         <div class="conv-amount" id="conv-result-amount"></div>
         <div class="conv-rate"   id="conv-result-rate"></div>
@@ -465,6 +449,7 @@
 
     if (!TOKEN) location.href = 'index.html';
 
+    // Show logged in username in the nav
     try {
       const user = JSON.parse(localStorage.getItem('fc_user') || '{}');
       document.getElementById('nav-user').textContent = user.username || '';
@@ -483,6 +468,7 @@
       };
     }
 
+    // Number formatting helpers
     function fmt(n, dp = 2, prefix = '') {
       if (n == null || isNaN(n)) return '—';
       return prefix + Number(n).toLocaleString('en-US', {
@@ -495,14 +481,12 @@
 
     function showError(msg) {
       const el = document.getElementById('err-alert');
-      el.textContent = msg;
+      el.textContent   = msg;
       el.style.display = msg ? 'block' : 'none';
     }
 
-    // ── FR2: Historical price chart ───────────────────────────────────
-    // Fetches 60 days of BTC-USD close prices from the backend and
-    // renders them using Chart.js. Loads automatically on page open.
-
+    // Loads the 60-day BTC price chart automatically when the page opens.
+    // Gives the user market context before they look at the forecast.
     let priceChart = null;
 
     async function loadHistoricalChart() {
@@ -524,6 +508,7 @@
         const canvas = document.getElementById('price-chart');
         canvas.style.display = 'block';
 
+        // Destroy the previous chart instance before drawing a new one
         if (priceChart) { priceChart.destroy(); }
 
         priceChart = new Chart(canvas, {
@@ -582,8 +567,7 @@
       }
     }
 
-    // ── Confidence gauge ──────────────────────────────────────────────
-
+    // Animates the gauge arc and needle based on confidence and direction
     function updateGauge(confidence, direction) {
       const pct = confidence * 100;
 
@@ -593,7 +577,10 @@
       const valEl  = document.getElementById('gauge-value');
       const lblEl  = document.getElementById('gauge-label');
 
+      // Arc fills from left to right — dashoffset controls how much is visible
       arc.style.strokeDashoffset = 220 - (pct / 100 * 220);
+
+      // Needle rotates from -90 (far left) to +90 (far right)
       needle.style.transform = `rotate(${-90 + (pct / 100 * 180)}deg)`;
 
       const color = direction === 'up' ? '#00d4aa' : '#f43f5e';
@@ -606,17 +593,62 @@
 
       if (pct >= 55) {
         lblEl.textContent = 'Strong signal';
-        lblEl.className = 'gauge-label signal-strong';
+        lblEl.className   = 'gauge-label signal-strong';
       } else if (pct >= 52) {
         lblEl.textContent = 'Moderate signal';
-        lblEl.className = 'gauge-label signal-mod';
+        lblEl.className   = 'gauge-label signal-mod';
       } else {
         lblEl.textContent = 'Weak / uncertain';
-        lblEl.className = 'gauge-label signal-weak';
+        lblEl.className   = 'gauge-label signal-weak';
       }
     }
 
-    // ── Run prediction ────────────────────────────────────────────────
+    // Builds a two-sentence plain-language explanation from real prediction values.
+    // Nothing is hardcoded — direction, volatility, sentiment and confidence
+    // all come from the API response and change with every prediction.
+    function buildExplanation(d) {
+      const isUp      = d.direction === 'up';
+      const returnAbs = Math.abs(d.pred_return_pct).toFixed(2);
+      const confPct   = (d.confidence * 100).toFixed(0);
+
+      // Describe what the price signals look like based on confidence level
+      const momentumDesc = d.confidence >= 0.55
+        ? 'stronger than usual buying pressure and clear upward momentum'
+        : d.confidence >= 0.52
+        ? 'slightly more buying activity than selling over the past month'
+        : 'mixed signals with no clear dominant trend';
+
+      // Describe how calm or turbulent the market is right now
+      const volDesc = d.vol_14d > 50
+        ? 'The market is quite volatile right now, so prices could swing sharply in either direction.'
+        : d.vol_14d > 30
+        ? 'The market is moderately active at the moment.'
+        : 'The market is relatively calm right now.';
+
+      // Translate the raw sentiment score into plain words
+      const sentDesc = d.sentiment_score > 0.05
+        ? 'News headlines are leaning positive today.'
+        : d.sentiment_score < -0.05
+        ? 'News headlines are leaning negative today.'
+        : 'News headlines are mostly neutral today.';
+
+      // How confident should the user feel about this forecast?
+      const confDesc = d.confidence >= 0.55
+        ? 'a reasonably strong signal'
+        : d.confidence >= 0.52
+        ? 'a weak but slightly positive signal'
+        : 'a low-confidence signal — the market could go either way';
+
+      // If confidence is too low, soften the directional language
+      const sentence1 = d.confidence < 0.52
+        ? `After analysing 30 days of Bitcoin price patterns, the system detected ${momentumDesc} — the forecast leans slightly ${isUp ? 'upward' : 'downward'} by around ${returnAbs}%, but the signal is too weak to be meaningful.`
+        : `After analysing 30 days of Bitcoin price patterns, the system detected ${momentumDesc} — suggesting the price is likely to ${isUp ? 'rise' : 'fall'} by around ${returnAbs}% tomorrow.`;
+
+      const sentence2 = `${volDesc} ${sentDesc} Overall, this is ${confDesc} at ${confPct}% confidence.`;
+
+      document.getElementById('explain-text').innerHTML =
+        `${sentence1}<br/><br/>${sentence2}`;
+    }
 
     async function runPrediction() {
       showError('');
@@ -650,11 +682,10 @@
         updateGauge(data.confidence, data.direction);
         buildExplanation(data);
 
-        // Pre-fill the converter with the predicted price for convenience
+        // Pre-fill the converter with the predicted price so the user can convert it straight away
         document.getElementById('conv-amount').value = data.predicted_price.toFixed(2);
 
         status.textContent = 'Updated ' + new Date().toLocaleTimeString();
-
         await loadHistory();
 
       } catch (err) {
@@ -670,7 +701,7 @@
       document.getElementById('metric-ticker').textContent  = data.ticker;
       document.getElementById('metric-vol').textContent     = fmt(data.vol_14d, 2) + '%';
 
-      const predEl = document.getElementById('metric-predicted');
+      const predEl       = document.getElementById('metric-predicted');
       predEl.textContent = fmtUSD(data.predicted_price);
       predEl.className   = 'm-val ' + (data.direction === 'up' ? 'up' : 'down');
 
@@ -679,19 +710,74 @@
     }
 
     function updateDetailCards(data) {
+      const isUp = data.direction === 'up';
+
       document.getElementById('detail-ticker').textContent     = data.ticker;
-      document.getElementById('detail-return').textContent     = fmtPct(data.pred_return_pct);
       document.getElementById('detail-confidence').textContent = fmt(data.confidence * 100, 1) + '%';
       document.getElementById('detail-timestamp').textContent  = data.timestamp || '—';
-      document.getElementById('detail-sentiment').textContent  =
-        data.sentiment_score != null ? fmt(data.sentiment_score, 4) : '—';
 
-      const isUp = data.direction === 'up';
+      // Show sentiment as plain words rather than a raw decimal number
+      const sent = data.sentiment_score;
+      document.getElementById('detail-sentiment').textContent =
+        sent == null   ? '—'
+        : sent > 0.05  ? 'Positive (' + fmt(sent, 4) + ')'
+        : sent < -0.05 ? 'Negative (' + fmt(sent, 4) + ')'
+        : 'Neutral (' + fmt(sent, 4) + ')';
+
       document.getElementById('detail-direction').innerHTML =
         `<span class="pill ${isUp ? 'pill-up' : 'pill-down'}">${isUp ? '↑ Up' : '↓ Down'}</span>`;
     }
 
-    // ── History table ─────────────────────────────────────────────────
+    // Converts a USD amount to the selected currency using a free live rate API.
+    // No API key needed for open.er-api.com.
+    async function convertCurrency() {
+      const amountInput  = document.getElementById('conv-amount');
+      const currencyEl   = document.getElementById('conv-currency');
+      const resultBox    = document.getElementById('conv-result');
+      const resultAmount = document.getElementById('conv-result-amount');
+      const resultRate   = document.getElementById('conv-result-rate');
+      const btn          = document.getElementById('btn-convert');
+
+      const amount   = parseFloat(amountInput.value);
+      const currency = currencyEl.value;
+
+      if (!amount || amount <= 0) {
+        resultBox.className      = 'conv-result err';
+        resultAmount.textContent = 'Please enter a valid amount first.';
+        resultRate.textContent   = '';
+        resultBox.style.display  = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      resultBox.style.display = 'none';
+
+      try {
+        const r = await fetch(`https://open.er-api.com/v6/latest/USD`);
+
+        if (!r.ok) throw new Error('Exchange rate service unavailable');
+
+        const data = await r.json();
+
+        if (!data.rates || !data.rates[currency]) throw new Error('Currency not found');
+
+        const rate      = data.rates[currency];
+        const converted = amount * rate;
+
+        resultBox.className      = 'conv-result';
+        resultAmount.textContent = `${converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+        resultRate.textContent   = `Rate: 1 USD = ${rate.toFixed(4)} ${currency}  ·  Amount: $${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+        resultBox.style.display  = 'block';
+
+      } catch (err) {
+        resultBox.className      = 'conv-result err';
+        resultAmount.textContent = 'Could not fetch exchange rate. Please try again.';
+        resultRate.textContent   = err.message;
+        resultBox.style.display  = 'block';
+      } finally {
+        btn.disabled = false;
+      }
+    }
 
     async function loadHistory() {
       try {
@@ -732,100 +818,7 @@
       }).join('');
     }
 
-    // ── Plain language explanation ────────────────────────────────────
-    // Builds two sentences explaining the forecast in plain English.
-    // Every part adapts to the actual numbers — nothing is hardcoded.
-
-    function buildExplanation(d) {
-      const isUp      = d.direction === 'up';
-      const returnAbs = Math.abs(d.pred_return_pct).toFixed(2);
-      const confPct   = (d.confidence * 100).toFixed(0);
-
-      const momentumDesc = d.confidence >= 0.55
-        ? 'stronger than usual buying pressure and clear upward momentum'
-        : d.confidence >= 0.52
-        ? 'slightly more buying activity than selling over the past month'
-        : 'mixed signals with no clear dominant trend';
-
-      const volDesc = d.vol_14d > 50
-        ? 'The market is quite volatile right now, so prices could swing sharply in either direction.'
-        : d.vol_14d > 30
-        ? 'The market is moderately active at the moment.'
-        : 'The market is relatively calm right now.';
-
-      const sentDesc = d.sentiment_score > 0.05
-        ? 'News headlines are leaning positive today.'
-        : d.sentiment_score < -0.05
-        ? 'News headlines are leaning negative today.'
-        : 'News headlines are mostly neutral today.';
-
-      const confDesc = d.confidence >= 0.55
-        ? 'a reasonably strong signal'
-        : d.confidence >= 0.52
-        ? 'a weak but slightly positive signal'
-        : 'a low-confidence signal — the market could go either way';
-
-      const sentence1 = d.confidence < 0.52
-        ? `After analysing 30 days of Bitcoin price patterns, the system detected ${momentumDesc} — the forecast leans slightly ${isUp ? 'upward' : 'downward'} by around ${returnAbs}%, but the signal is too weak to be meaningful.`
-        : `After analysing 30 days of Bitcoin price patterns, the system detected ${momentumDesc} — suggesting the price is likely to ${isUp ? 'rise' : 'fall'} by around ${returnAbs}% tomorrow.`;
-
-      const sentence2 = `${volDesc} ${sentDesc} Overall, this is ${confDesc} at ${confPct}% confidence.`;
-
-      document.getElementById('explain-text').innerHTML =
-        `${sentence1}<br/><br/>${sentence2}`;
-    }
-
-    // ── Currency converter ────────────────────────────────────────────
-    // Uses open.er-api.com free API — no key needed.
-
-    async function convertCurrency() {
-      const amountInput  = document.getElementById('conv-amount');
-      const currencyEl   = document.getElementById('conv-currency');
-      const resultBox    = document.getElementById('conv-result');
-      const resultAmount = document.getElementById('conv-result-amount');
-      const resultRate   = document.getElementById('conv-result-rate');
-      const btn          = document.getElementById('btn-convert');
-
-      const amount   = parseFloat(amountInput.value);
-      const currency = currencyEl.value;
-
-      if (!amount || amount <= 0) {
-        resultBox.className      = 'conv-result err';
-        resultAmount.textContent = 'Please enter a valid amount first.';
-        resultRate.textContent   = '';
-        resultBox.style.display  = 'block';
-        return;
-      }
-
-      btn.disabled = true;
-      resultBox.style.display = 'none';
-
-      try {
-        const r = await fetch(`https://open.er-api.com/v6/latest/USD`);
-        if (!r.ok) throw new Error('Exchange rate service unavailable');
-
-        const data = await r.json();
-        if (!data.rates || !data.rates[currency]) throw new Error('Currency not found');
-
-        const rate      = data.rates[currency];
-        const converted = amount * rate;
-
-        resultBox.className      = 'conv-result';
-        resultAmount.textContent = `${converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
-        resultRate.textContent   = `Rate: 1 USD = ${rate.toFixed(4)} ${currency}  ·  Amount: $${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-        resultBox.style.display  = 'block';
-
-      } catch (err) {
-        resultBox.className      = 'conv-result err';
-        resultAmount.textContent = 'Could not fetch exchange rate. Please try again.';
-        resultRate.textContent   = err.message;
-        resultBox.style.display  = 'block';
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    // Load chart and history on page open
+    // Load the chart and history as soon as the page opens
     loadHistoricalChart();
     loadHistory();
   </script>

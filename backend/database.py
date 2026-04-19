@@ -5,6 +5,8 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
+    # Stores registered user accounts with role-based access.
+    # Role is either 'user' (default) or 'admin'.
     __tablename__ = 'users'
 
     id            = db.Column(db.Integer, primary_key=True)
@@ -15,9 +17,11 @@ class User(db.Model):
     created_at    = db.Column(db.DateTime,    default=datetime.utcnow)
     is_active     = db.Column(db.Boolean,     default=True)
 
+    # One user can have many predictions
     predictions = db.relationship('Prediction', backref='user', lazy=True)
 
     def to_dict(self):
+        # Returns a safe dictionary representation — password hash is never included
         return {
             'id':         self.id,
             'username':   self.username,
@@ -29,19 +33,21 @@ class User(db.Model):
 
 
 class Prediction(db.Model):
+    # Stores every forecast run by a user, including all model output values.
+    # Used to populate the prediction history table on the dashboard.
     __tablename__ = 'predictions'
 
-    id               = db.Column(db.Integer, primary_key=True)
-    user_id          = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    ticker           = db.Column(db.String(20),  default='BTC-USD')
-    current_price    = db.Column(db.Float,  nullable=False)
-    predicted_price  = db.Column(db.Float,  nullable=False)
-    pred_return_pct  = db.Column(db.Float,  nullable=False)
-    direction        = db.Column(db.String(10), nullable=False)
-    confidence       = db.Column(db.Float,  nullable=False)
-    vol_14d          = db.Column(db.Float)
-    sentiment_score  = db.Column(db.Float,  default=0.0)
-    created_at       = db.Column(db.DateTime, default=datetime.utcnow)
+    id              = db.Column(db.Integer, primary_key=True)
+    user_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    ticker          = db.Column(db.String(20),  default='BTC-USD')
+    current_price   = db.Column(db.Float,  nullable=False)
+    predicted_price = db.Column(db.Float,  nullable=False)
+    pred_return_pct = db.Column(db.Float,  nullable=False)
+    direction       = db.Column(db.String(10), nullable=False)
+    confidence      = db.Column(db.Float,  nullable=False)
+    vol_14d         = db.Column(db.Float)
+    sentiment_score = db.Column(db.Float,  default=0.0)
+    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
         return {

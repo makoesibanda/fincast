@@ -11,9 +11,6 @@
   <link rel="stylesheet" href="fincast.css" />
 
   <style>
-    /* ── Market selection page specific styles ───────────────────────── */
-
-    /* Page intro */
     .page-header {
       text-align: center;
       margin-bottom: 2.5rem;
@@ -30,7 +27,7 @@
       font-size: .9rem;
     }
 
-    /* ── Market category cards ───────────────────────────────────────── */
+    /* Market category card grid */
     .markets-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -49,19 +46,18 @@
       width: 100%;
     }
 
-    /* Hover effect only on live markets */
     .market-card:hover {
       border-color: var(--accent2);
       transform: translateY(-2px);
     }
 
-    /* Currently selected / active market */
+    /* Currently selected market card */
     .market-card.active-market {
       border-color: var(--accent);
       background: rgba(0, 212, 170, .05);
     }
 
-    /* Greyed out for markets not yet implemented */
+    /* Greyed out for markets not yet built */
     .market-card.coming-soon {
       opacity: .55;
       cursor: default;
@@ -72,16 +68,8 @@
       transform: none;
     }
 
-    .market-icon {
-      font-size: 1.8rem;
-      margin-bottom: .75rem;
-    }
-
-    .market-name {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: .3rem;
-    }
+    .market-icon { font-size: 1.8rem; margin-bottom: .75rem; }
+    .market-name { font-size: 1rem; font-weight: 600; margin-bottom: .3rem; }
 
     .market-desc {
       font-size: .8rem;
@@ -90,7 +78,6 @@
       line-height: 1.5;
     }
 
-    /* Live / coming soon badge on each market card */
     .market-badge {
       display: inline-block;
       padding: .15rem .55rem;
@@ -102,9 +89,7 @@
     .badge-live { background: rgba(0, 212, 170, .15); color: var(--accent); }
     .badge-soon { background: rgba(107, 122, 141, .15); color: var(--muted); }
 
-    /* ── Asset selection panel ───────────────────────────────────────── */
-
-    /* Panel is hidden initially, shown when a market is selected */
+    /* Asset selection panel — hidden until a market is chosen */
     .asset-panel {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -153,7 +138,6 @@
       background: rgba(0, 212, 170, .08);
     }
 
-    /* Assets that are not yet available */
     .asset-btn.asset-soon {
       opacity: .5;
       cursor: default;
@@ -184,7 +168,7 @@
     .tag-live { background: rgba(0, 212, 170, .15); color: var(--accent); }
     .tag-soon { background: rgba(107, 122, 141, .12); color: var(--muted); }
 
-    /* ── Coming soon modal ───────────────────────────────────────────── */
+    /* Coming soon modal */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -210,10 +194,7 @@
       text-align: center;
     }
 
-    .modal-icon {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-    }
+    .modal-icon { font-size: 2.5rem; margin-bottom: 1rem; }
 
     .modal h3 {
       font-size: 1.1rem;
@@ -240,14 +221,12 @@
       transition: opacity .15s;
     }
 
-    .modal-close:hover {
-      opacity: .85;
-    }
+    .modal-close:hover { opacity: .85; }
   </style>
 </head>
 <body>
 
-  <!-- Ethical use disclaimer - required by NFR5 -->
+  <!-- Ethical use disclaimer - NFR5 -->
   <div class="disclaimer">
     ⚠️ For educational and decision-support purposes only. Not financial advice. Past performance does not guarantee future results.
   </div>
@@ -267,8 +246,7 @@
       <p>Choose a market category below, then pick the instrument you want to analyse.</p>
     </div>
 
-    <!-- Step 1: Market category selection -->
-    <!-- New markets can be added here as they become available -->
+    <!-- Step 1: market category selection -->
     <div class="section-label">Step 1 — Choose Market Category</div>
     <div class="markets-grid">
 
@@ -279,7 +257,7 @@
         <span class="market-badge badge-live">● Live</span>
       </button>
 
-      <!-- Placeholder for future market: Equities -->
+      <!-- Placeholder for future market expansion -->
       <button class="market-card coming-soon" onclick="showComingSoon('Equities')">
         <div class="market-icon">📈</div>
         <div class="market-name">Equities</div>
@@ -287,7 +265,6 @@
         <span class="market-badge badge-soon">Coming Soon</span>
       </button>
 
-      <!-- Placeholder for future market: Forex -->
       <button class="market-card coming-soon" onclick="showComingSoon('Forex')">
         <div class="market-icon">💱</div>
         <div class="market-name">Forex</div>
@@ -295,7 +272,6 @@
         <span class="market-badge badge-soon">Coming Soon</span>
       </button>
 
-      <!-- Placeholder for future market: Commodities -->
       <button class="market-card coming-soon" onclick="showComingSoon('Commodities')">
         <div class="market-icon">🥇</div>
         <div class="market-name">Commodities</div>
@@ -305,8 +281,7 @@
 
     </div>
 
-    <!-- Step 2: Asset selection (crypto only for now) -->
-    <!-- This panel is visible by default since crypto is pre-selected -->
+    <!-- Step 2: asset selection — crypto panel is visible by default -->
     <div class="asset-panel visible" id="asset-panel-crypto">
       <div class="asset-panel-title">Step 2 — Select Instrument (Cryptocurrency)</div>
       <div class="assets-grid">
@@ -318,7 +293,7 @@
           <span class="asset-tag tag-live">● Live</span>
         </button>
 
-        <!-- The assets below are placeholders for future models -->
+        <!-- Remaining assets are placeholders for future model deployments -->
         <button class="asset-btn asset-soon" onclick="showAssetComingSoon('BTC-GBP')">
           <span class="asset-name">BTC-GBP</span>
           <span class="asset-full">Bitcoin / British Pound</span>
@@ -342,7 +317,7 @@
 
   </main>
 
-  <!-- Coming soon modal - reused for both markets and assets -->
+  <!-- Reused for both market and asset coming soon messages -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
       <div class="modal-icon">🚧</div>
@@ -355,12 +330,8 @@
   <script>
     const TOKEN = localStorage.getItem('fc_token');
 
-    // Redirect to login if no session exists
-    if (!TOKEN) {
-      location.href = 'index.html';
-    }
+    if (!TOKEN) location.href = 'index.html';
 
-    // Show the logged in username in the nav
     try {
       const user = JSON.parse(localStorage.getItem('fc_user') || '{}');
       document.getElementById('nav-user').textContent = user.username || '';
@@ -372,18 +343,13 @@
       location.href = 'index.html';
     }
 
-    // Handle market category click
-    // Only crypto is live - everything else shows the coming soon modal
     function selectMarket(market) {
-      if (market !== 'crypto') {
-        showComingSoon(market);
-      }
-      // Crypto panel is already visible by default, nothing else to do
+      // Only crypto is live — everything else shows the coming soon modal
+      if (market !== 'crypto') showComingSoon(market);
     }
 
-    // Handle asset click
-    // Only BTC-USD has a trained model behind it
     function selectAsset(ticker) {
+      // Only BTC-USD has a trained model — redirect to dashboard or show modal
       if (ticker === 'BTC-USD') {
         location.href = 'dashboard.html';
       } else {
@@ -391,7 +357,6 @@
       }
     }
 
-    // Show modal for unimplemented market categories
     function showComingSoon(marketName) {
       document.getElementById('modal-title').textContent = marketName + ' — Coming Soon';
       document.getElementById('modal-msg').textContent =
@@ -401,7 +366,6 @@
       document.getElementById('modal').classList.add('show');
     }
 
-    // Show modal for assets without a deployed model yet
     function showAssetComingSoon(ticker) {
       document.getElementById('modal-title').textContent = ticker + ' — Coming Soon';
       document.getElementById('modal-msg').textContent =

@@ -5,22 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FinCast — Sign In</title>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- Shared styles -->
   <link rel="stylesheet" href="fincast.css" />
 
   <style>
-    /* ── Login page specific styles ─────────────────────────────────── */
-
-    /* Slightly larger grid pattern on login page for visual impact */
+    /* Slightly larger grid on the login page for more visual impact */
     body::before {
       background-size: 40px 40px;
     }
 
-    /* Hero section - centres everything vertically */
+    /* Full height centred layout for the hero section */
     .hero {
       flex: 1;
       display: flex;
@@ -41,7 +37,6 @@
       text-align: center;
     }
 
-    /* Big headline */
     .headline {
       font-size: clamp(2rem, 6vw, 3.8rem);
       font-weight: 600;
@@ -62,7 +57,7 @@
       margin: .9rem auto 1.5rem;
     }
 
-    /* Stats badges shown below the headline */
+    /* Quick stat badges shown under the headline */
     .badges {
       display: flex;
       flex-wrap: wrap;
@@ -80,7 +75,7 @@
       color: var(--accent);
     }
 
-    /* Login / Register card */
+    /* Auth card */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -90,7 +85,7 @@
       max-width: 420px;
     }
 
-    /* Tab switcher between Sign In and Register */
+    /* Sign In / Register tab switcher */
     .tabs {
       display: flex;
       gap: .5rem;
@@ -117,7 +112,6 @@
       font-weight: 600;
     }
 
-    /* Form fields */
     .fg {
       margin-bottom: 1rem;
     }
@@ -148,7 +142,6 @@
       border-color: var(--accent);
     }
 
-    /* Submit button */
     .btn {
       width: 100%;
       padding: .75rem;
@@ -164,10 +157,10 @@
       margin-top: .5rem;
     }
 
-    .btn:hover     { opacity: .85; }
-    .btn:disabled  { opacity: .4; cursor: not-allowed; }
+    .btn:hover    { opacity: .85; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
 
-    /* Status message below the button */
+    /* Status message area below the submit button */
     .msg {
       font-size: .83rem;
       margin-top: .7rem;
@@ -181,16 +174,14 @@
 </head>
 <body>
 
-  <!-- Simple nav - just the logo on the login page -->
+  <!-- Nav shows only the logo on the login page -->
   <nav>
     <span class="logo">Fin<span>Cast</span></span>
   </nav>
 
-  <!-- Hero section with headline + login card -->
   <section class="hero">
     <div class="hero-inner">
 
-      <!-- Headline block -->
       <div>
         <h1 class="headline">Intelligent<br /><em>BTC Forecasting</em></h1>
         <p class="sub">
@@ -198,7 +189,7 @@
           Built for the Goldsmiths BSc Computer Science final year project.
         </p>
 
-        <!-- Quick model stats so users know what they're getting into -->
+        <!-- Key model stats so users know what the system is capable of -->
         <div class="badges">
           <span class="badge">GRU Sharpe 2.612</span>
           <span class="badge">DirAcc 54.19%</span>
@@ -209,10 +200,8 @@
         </div>
       </div>
 
-      <!-- Auth card -->
       <div class="card">
 
-        <!-- Toggle between login and register -->
         <div class="tabs">
           <button class="tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
           <button class="tab"        id="tab-reg"   onclick="switchTab('reg')">Register</button>
@@ -232,7 +221,7 @@
           <p class="msg" id="msg-login"></p>
         </form>
 
-        <!-- Register form (hidden by default) -->
+        <!-- Register form — hidden until the user switches tabs -->
         <form id="form-reg" style="display: none;" onsubmit="doRegister(event)">
           <div class="fg">
             <label>Username</label>
@@ -257,23 +246,20 @@
   <script>
     const API = '/api';
 
-    // If already logged in, skip straight to market selection
+    // Skip the login page entirely if a session already exists
     if (localStorage.getItem('fc_token')) {
       location.href = 'market.html';
     }
 
-    // Switch between login and register tabs
     function switchTab(tab) {
+      // Toggle which form is visible and which tab is highlighted
       const isLogin = tab === 'login';
-
       document.getElementById('form-login').style.display = isLogin ? '' : 'none';
       document.getElementById('form-reg').style.display   = isLogin ? 'none' : '';
-
       document.getElementById('tab-login').classList.toggle('active', isLogin);
       document.getElementById('tab-reg').classList.toggle('active', !isLogin);
     }
 
-    // Handle login form submission
     async function doLogin(e) {
       e.preventDefault();
 
@@ -281,8 +267,8 @@
       const btn = document.getElementById('btn-login');
 
       msg.textContent = 'Signing in…';
-      msg.className = 'msg';
-      btn.disabled = true;
+      msg.className   = 'msg';
+      btn.disabled    = true;
 
       try {
         const response = await fetch(`${API}/auth/login`, {
@@ -298,29 +284,27 @@
 
         if (!response.ok) {
           msg.textContent = data.error || 'Login failed';
-          msg.className = 'msg err';
+          msg.className   = 'msg err';
           return;
         }
 
-        // Store token and user info for use across pages
+        // Store token and user info so other pages can access them
         localStorage.setItem('fc_token', data.token);
-        localStorage.setItem('fc_user', JSON.stringify(data.user));
+        localStorage.setItem('fc_user',  JSON.stringify(data.user));
 
         msg.textContent = 'Success!';
-        msg.className = 'msg ok';
+        msg.className   = 'msg ok';
 
-        // Go to market selection page
         setTimeout(() => location.href = 'market.html', 500);
 
       } catch {
         msg.textContent = 'Network error. Please try again.';
-        msg.className = 'msg err';
+        msg.className   = 'msg err';
       } finally {
         btn.disabled = false;
       }
     }
 
-    // Handle register form submission
     async function doRegister(e) {
       e.preventDefault();
 
@@ -328,8 +312,8 @@
       const btn = document.getElementById('btn-reg');
 
       msg.textContent = 'Creating account…';
-      msg.className = 'msg';
-      btn.disabled = true;
+      msg.className   = 'msg';
+      btn.disabled    = true;
 
       try {
         const response = await fetch(`${API}/auth/register`, {
@@ -346,19 +330,19 @@
 
         if (!response.ok) {
           msg.textContent = data.error || 'Registration failed';
-          msg.className = 'msg err';
+          msg.className   = 'msg err';
           return;
         }
 
         msg.textContent = 'Account created! You can now sign in.';
-        msg.className = 'msg ok';
+        msg.className   = 'msg ok';
 
-        // Switch back to login tab after a moment
+        // Switch back to login tab after a short delay
         setTimeout(() => switchTab('login'), 1200);
 
       } catch {
         msg.textContent = 'Network error. Please try again.';
-        msg.className = 'msg err';
+        msg.className   = 'msg err';
       } finally {
         btn.disabled = false;
       }

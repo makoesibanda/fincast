@@ -11,11 +11,7 @@
   <link rel="stylesheet" href="fincast.css" />
 
   <style>
-    /* ── Sentiment page specific styles ─────────────────────────────── */
-
-    main {
-      max-width: 1100px;
-    }
+    main { max-width: 1100px; }
 
     /* Three-column stat row at the top */
     .top-row {
@@ -25,11 +21,8 @@
       margin-bottom: 2rem;
     }
 
-    @media (max-width: 700px) {
-      .top-row { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 700px) { .top-row { grid-template-columns: 1fr; } }
 
-    /* Stat cards for mean score and headline count */
     .stat-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -51,13 +44,9 @@
       font-family: 'Space Mono', monospace;
     }
 
-    .stat-sub {
-      font-size: .78rem;
-      color: var(--muted);
-      margin-top: .3rem;
-    }
+    .stat-sub { font-size: .78rem; color: var(--muted); margin-top: .3rem; }
 
-    /* Sentiment meter card - horizontal slider showing bearish to bullish */
+    /* Sentiment meter — horizontal gradient slider */
     .meter-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -78,7 +67,7 @@
       font-family: 'Space Mono', monospace;
     }
 
-    /* The coloured gradient bar */
+    /* Gradient from red (bearish) through neutral to green (bullish) */
     .meter-track {
       width: 100%;
       height: 12px;
@@ -87,7 +76,7 @@
       position: relative;
     }
 
-    /* The moveable thumb that sits on the bar */
+    /* Moveable thumb that slides to reflect the current score */
     .meter-thumb {
       width: 18px;
       height: 18px;
@@ -109,14 +98,12 @@
       font-family: 'Space Mono', monospace;
     }
 
-    /* Big number showing the current mean sentiment score */
     .meter-big {
       font-size: 1.6rem;
       font-weight: 700;
       font-family: 'Space Mono', monospace;
     }
 
-    /* Row containing the fetch button and status text */
     .refresh-row {
       display: flex;
       align-items: center;
@@ -139,18 +126,10 @@
     .btn-refresh:hover:not(:disabled) { opacity: .85; }
     .btn-refresh:disabled { opacity: .4; cursor: not-allowed; }
 
-    .ref-status {
-      font-size: .8rem;
-      color: var(--muted);
-      font-family: 'Space Mono', monospace;
-    }
+    .ref-status { font-size: .8rem; color: var(--muted); font-family: 'Space Mono', monospace; }
 
-    /* ── Individual headline cards ───────────────────────────────────── */
-    .headlines {
-      display: flex;
-      flex-direction: column;
-      gap: .75rem;
-    }
+    /* Individual headline cards */
+    .headlines { display: flex; flex-direction: column; gap: .75rem; }
 
     .hl-card {
       background: var(--surface);
@@ -163,11 +142,9 @@
       transition: border-color .15s;
     }
 
-    .hl-card:hover {
-      border-color: var(--border2);
-    }
+    .hl-card:hover { border-color: var(--border2); }
 
-    /* Coloured score box on the left of each headline */
+    /* Coloured score box on the left of each headline card */
     .hl-score-box {
       width: 54px;
       height: 54px;
@@ -185,27 +162,14 @@
     .neg-box { background: rgba(244, 63, 94, .1);   color: var(--danger); border: 1px solid rgba(244, 63, 94, .2); }
     .neu-box { background: rgba(107, 122, 141, .1); color: var(--muted);  border: 1px solid rgba(107, 122, 141, .2); }
 
-    .hl-body  { flex: 1; }
+    .hl-body { flex: 1; }
 
-    .hl-title {
-      font-size: .88rem;
-      line-height: 1.5;
-      margin-bottom: .35rem;
-    }
+    .hl-title { font-size: .88rem; line-height: 1.5; margin-bottom: .35rem; }
 
-    .hl-meta {
-      display: flex;
-      gap: .75rem;
-      align-items: center;
-    }
+    .hl-meta { display: flex; gap: .75rem; align-items: center; }
 
-    .hl-source {
-      font-size: .75rem;
-      color: var(--muted);
-      font-family: 'Space Mono', monospace;
-    }
+    .hl-source { font-size: .75rem; color: var(--muted); font-family: 'Space Mono', monospace; }
 
-    /* Positive / negative / neutral label pill */
     .hl-label {
       padding: .1rem .45rem;
       border-radius: 5px;
@@ -227,7 +191,6 @@
 
     .hl-link:hover { color: var(--text); }
 
-    /* Empty state box */
     .empty-state {
       text-align: center;
       color: var(--muted);
@@ -237,7 +200,6 @@
       border-radius: var(--radius-lg);
     }
 
-    /* Info note at the top of the page */
     .note-box {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -276,14 +238,14 @@
       <p>Real-time financial news scored with FinBERT (ProsusAI/finbert) — the NLP modality of the multimodal hybrid system.</p>
     </div>
 
-    <!-- Explain the sentiment placeholder used during training -->
+    <!-- Context note explaining the zero-placeholder used during training -->
     <div class="note-box">
       <strong>About this panel:</strong> During model training (2018–2022), historical sentiment was unavailable so a zero placeholder was used.
       This live feed demonstrates the operational FinBERT pipeline — headlines are fetched from financial RSS feeds and scored in real time.
       The sentiment score feeds directly into the 19th feature of the model at inference time.
     </div>
 
-    <!-- Summary stats: mean score, headline count, and the visual meter -->
+    <!-- Mean score, headline count, and visual meter -->
     <div class="top-row">
 
       <div class="stat-card">
@@ -298,7 +260,6 @@
         <div class="stat-sub">from CoinDesk, CryptoPanic, BBC</div>
       </div>
 
-      <!-- Visual slider showing where sentiment sits on the scale -->
       <div class="meter-card">
         <div class="meter-title">Sentiment Meter</div>
         <div class="meter-big" id="meter-val">—</div>
@@ -314,16 +275,12 @@
 
     </div>
 
-    <!-- Fetch button - triggers API call to get live headlines -->
     <div class="refresh-row">
-      <button class="btn-refresh" id="btn-fetch" onclick="loadSentiment()">
-        Fetch Headlines
-      </button>
+      <button class="btn-refresh" id="btn-fetch" onclick="loadSentiment()">Fetch Headlines</button>
       <div class="spinner" id="spinner"></div>
       <span class="ref-status" id="fetch-status">Click to fetch live headlines</span>
     </div>
 
-    <!-- Headlines list - populated by JS -->
     <div class="section-label">Headlines &amp; Scores</div>
     <div id="headlines-wrap">
       <div class="empty-state">Click "Fetch Headlines" to load live financial news.</div>
@@ -349,29 +306,25 @@
     }
 
     function authHeaders() {
-      return {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + TOKEN
-      };
+      return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
     }
 
     function fmt(n, dp = 4) {
       return n != null && !isNaN(n) ? Number(n).toFixed(dp) : '—';
     }
 
-    // Move the sentiment meter thumb to reflect the current score (-1 to +1)
     function updateMeter(score) {
+      // Map the -1 to +1 score onto a 0-100% position for the thumb
       const clamped = Math.max(-1, Math.min(1, score));
       const pct     = ((clamped + 1) / 2) * 100;
 
       document.getElementById('meter-thumb').style.left = pct + '%';
 
-      const valEl = document.getElementById('meter-val');
+      const valEl       = document.getElementById('meter-val');
       valEl.textContent = (clamped >= 0 ? '+' : '') + clamped.toFixed(4);
       valEl.style.color = clamped > 0.05 ? 'var(--accent)' : clamped < -0.05 ? 'var(--danger)' : 'var(--muted)';
     }
 
-    // Fetch headlines from the sentiment API and render them
     async function loadSentiment() {
       const btn    = document.getElementById('btn-fetch');
       const spin   = document.getElementById('spinner');
@@ -382,15 +335,12 @@
       status.textContent = 'Fetching and scoring headlines…';
 
       try {
-        const response = await fetch(`${API}/sentiment/live?max=15`, {
-          headers: authHeaders()
-        });
+        const response = await fetch(`${API}/sentiment/live?max=15`, { headers: authHeaders() });
 
         if (response.status === 401) { location.href = 'index.html'; return; }
 
         const data = await response.json();
 
-        // Handle API-level errors
         if (!response.ok || data.error) {
           status.textContent = data.error || 'Failed to fetch headlines';
           document.getElementById('headlines-wrap').innerHTML =
@@ -398,29 +348,25 @@
           return;
         }
 
-        // Update the summary stats
-        const scoreEl = document.getElementById('mean-score');
+        // Update the summary stat cards
+        const scoreEl       = document.getElementById('mean-score');
         scoreEl.textContent = (data.mean_score >= 0 ? '+' : '') + fmt(data.mean_score, 4);
         scoreEl.style.color = data.mean_score > 0.05 ? 'var(--accent)' : data.mean_score < -0.05 ? 'var(--danger)' : 'var(--text)';
 
         document.getElementById('hl-count').textContent = data.count || data.headlines?.length || 0;
-
         updateMeter(data.mean_score);
 
-        // Render the individual headline cards
         const items = data.headlines || [];
 
         if (!items.length) {
-          document.getElementById('headlines-wrap').innerHTML =
-            '<div class="empty-state">No headlines returned.</div>';
+          document.getElementById('headlines-wrap').innerHTML = '<div class="empty-state">No headlines returned.</div>';
           return;
         }
 
+        // Render each headline card with its sentiment score and label
         document.getElementById('headlines-wrap').innerHTML = items.map(h => {
-          const label = h.label || 'neutral';
-          const score = h.sentiment || 0;
-
-          // Pick box colour class based on sentiment label
+          const label    = h.label || 'neutral';
+          const score    = h.sentiment || 0;
           const boxClass = label === 'positive' ? 'pos-box' : label === 'negative' ? 'neg-box' : 'neu-box';
           const lblClass = label === 'positive' ? 'lbl-positive' : label === 'negative' ? 'lbl-negative' : 'lbl-neutral';
           const scoreStr = (score >= 0 ? '+' : '') + score.toFixed(4);

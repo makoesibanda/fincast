@@ -391,7 +391,7 @@
         });
 
       } catch (e) {
-        document.getElementById('chart-loading').textContent = 'Could not load chart.';
+        document.getElementById('chart-loading').textContent = 'Server is starting up. Please refresh the page.';
       }
     }
 
@@ -516,7 +516,7 @@
         await loadHistory();
 
       } catch (err) {
-        showError('Network error: ' + err.message);
+        showError('Network error, please click again ');
       } finally {
         btn.disabled = false;
         spin.style.display = 'none';

@@ -3,12 +3,242 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FinCast — Sentiment</title>
+  <title>FinCast - Sentiment</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="fincast.css" />
+
+</head>
+<body>
+
+  <nav>
+    <span class="logo">Fin<span>Cast</span></span>
+
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="models.html">Models</a>
+      <a href="sentiment.html" class="active">Sentiment</a>
+    </div>
+
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <button class="btn-sm" onclick="logout()">Sign out</button>
+    </div>
+  </nav>
+
+  <main>
+
+    <div class="page-title">
+      <h1>Live Sentiment Feed</h1>
+      <p>Real-time financial news scored with FinBERT (ProsusAI/finbert) - the NLP modality of the multimodal hybrid system.</p>
+    </div>
+
+    <!-- Context note explaining the zero-placeholder used during training -->
+    <div class="note-box">
+      <strong>About this panel:</strong> During model training (2018–2022), historical sentiment was unavailable so a zero placeholder was used.
+      This live feed demonstrates the operational FinBERT pipeline - headlines are fetched from financial RSS feeds and scored in real time.
+      The sentiment score feeds directly into the 19th feature of the model at inference time.
+    </div>
+
+    <!-- Mean score, headline count, and visual meter -->
+    <div class="top-row">
+
+      <div class="stat-card">
+        <div class="stat-label">Mean Sentiment Score</div>
+        <div class="stat-val" id="mean-score">-</div>
+        <div class="stat-sub">−1 = very negative · +1 = very positive</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Headlines Scored</div>
+        <div class="stat-val" id="hl-count">-</div>
+        <div class="stat-sub">from CoinDesk, CryptoPanic, BBC</div>
+      </div>
+
+      <div class="meter-card">
+        <div class="meter-title">Sentiment Meter</div>
+        <div class="meter-big" id="meter-val">-</div>
+        <div class="meter-track">
+          <div class="meter-thumb" id="meter-thumb" style="left: 50%;"></div>
+        </div>
+        <div class="meter-labels">
+          <span>−1 Bearish</span>
+          <span>0 Neutral</span>
+          <span>+1 Bullish</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="refresh-row">
+      <button class="btn-refresh" id="btn-fetch" onclick="loadSentiment()">Fetch Headlines</button>
+      <div class="spinner" id="spinner"></div>
+      <span class="ref-status" id="fetch-status">Click to fetch live headlines</span>
+    </div>
+
+    <div class="section-label">Headlines &amp; Scores</div>
+    <div id="headlines-wrap">
+      <div class="empty-state">Click "Fetch Headlines" to load live financial news.</div>
+    </div>
+
+  </main>
+
+  <script>
+    const API   = '/api';
+    const TOKEN = localStorage.getItem('fc_token');
+
+    if (!TOKEN) location.href = 'index.html';
+
+    try {
+      const user = JSON.parse(localStorage.getItem('fc_user') || '{}');
+      document.getElementById('nav-user').textContent = user.username || '';
+    } catch {}
+
+    function logout() {
+      localStorage.removeItem('fc_token');
+      localStorage.removeItem('fc_user');
+      location.href = 'index.html';
+    }
+
+    function authHeaders() {
+      return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
+    }
+
+    function fmt(n, dp = 4) {
+      return n != null && !isNaN(n) ? Number(n).toFixed(dp) : '-';
+    }
+
+    function updateMeter(score) {
+      // Map the -1 to +1 score onto a 0-100% position for the thumb
+      const clamped = Math.max(-1, Math.min(1, score));
+      const pct     = ((clamped + 1) / 2) * 100;
+
+      document.getElementById('meter-thumb').style.left = pct + '%';
+
+      const valEl       = document.getElementById('meter-val');
+      valEl.textContent = (clamped >= 0 ? '+' : '') + clamped.toFixed(4);
+      valEl.style.color = clamped > 0.05 ? 'var(--accent)' : clamped < -0.05 ? 'var(--danger)' : 'var(--muted)';
+    }
+
+    async function loadSentiment() {
+      const btn    = document.getElementById('btn-fetch');
+      const spin   = document.getElementById('spinner');
+      const status = document.getElementById('fetch-status');
+
+      btn.disabled = true;
+      spin.style.display = 'inline-block';
+      status.textContent = 'Fetching and scoring headlines…';
+
+      try {
+        const response = await fetch(`${API}/sentiment/live?max=15`, { headers: authHeaders() });
+
+        if (response.status === 401) { location.href = 'index.html'; return; }
+
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+          status.textContent = data.error || 'Failed to fetch headlines';
+          document.getElementById('headlines-wrap').innerHTML =
+            `<div class="empty-state">${data.error || 'No headlines available right now.'}</div>`;
+          return;
+        }
+
+        // Update the summary stat cards
+        const scoreEl       = document.getElementById('mean-score');
+        scoreEl.textContent = (data.mean_score >= 0 ? '+' : '') + fmt(data.mean_score, 4);
+        scoreEl.style.color = data.mean_score > 0.05 ? 'var(--accent)' : data.mean_score < -0.05 ? 'var(--danger)' : 'var(--text)';
+
+        document.getElementById('hl-count').textContent = data.count || data.headlines?.length || 0;
+        updateMeter(data.mean_score);
+
+        const items = data.headlines || [];
+
+        if (!items.length) {
+          document.getElementById('headlines-wrap').innerHTML = '<div class="empty-state">No headlines returned.</div>';
+          return;
+        }
+
+        // Render each headline card with its sentiment score and label
+        document.getElementById('headlines-wrap').innerHTML = items.map(h => {
+          const label    = h.label || 'neutral';
+          const score    = h.sentiment || 0;
+          const boxClass = label === 'positive' ? 'pos-box' : label === 'negative' ? 'neg-box' : 'neu-box';
+          const lblClass = label === 'positive' ? 'lbl-positive' : label === 'negative' ? 'lbl-negative' : 'lbl-neutral';
+          const scoreStr = (score >= 0 ? '+' : '') + score.toFixed(4);
+
+          return `<div class="hl-card">
+            <div class="hl-score-box ${boxClass}">${scoreStr}</div>
+            <div class="hl-body">
+              <div class="hl-title">${h.title || 'No title'}</div>
+              <div class="hl-meta">
+                <span class="hl-source">${h.source || 'unknown'}</span>
+                <span class="hl-label ${lblClass}">${label}</span>
+                ${h.link ? `<a class="hl-link" href="${h.link}" target="_blank" rel="noopener">Read →</a>` : ''}
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+
+        status.textContent = 'Last fetched at ' + new Date().toLocaleTimeString();
+
+      } catch (err) {
+        status.textContent = 'Error: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        spin.style.display = 'none';
+      }
+    }
+  </script>
+
+  <!-- One-time notice shown when the sentiment page first opens -->
+<div id="sent-notice" style="
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999; backdrop-filter: blur(6px);">
+
+  <div style="
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;">
+
+    <div style="font-size: 2rem; margin-bottom: 1rem;">📰</div>
+
+    <h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: .75rem;">
+      What is this page?
+    </h2>
+
+    <p style="font-size: .88rem; color: var(--muted); line-height: 1.75; margin-bottom: 1.5rem;">
+      This page fetches live financial news headlines from CoinDesk, CryptoPanic
+      and BBC Business, then scores each one using <strong style="color: var(--text);">FinBERT</strong> -
+      a language model trained specifically on financial text.<br/><br/>
+      The sentiment score shown here reflects <strong style="color: var(--text);">what the news is saying</strong>,
+      not the current BTC price. A positive score means headlines are leaning bullish today.
+      A negative score means the mood in the news is bearish.<br/><br/>
+      This score is also fed directly into the forecasting model as one of its 19 input features.
+    </p>
+
+    <button onclick="document.getElementById('sent-notice').style.display='none'" style="
+      padding: .65rem 2rem;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;">
+      Got it, show me the news
+    </button>
+
+  </div>
+</div>
+
 
   <style>
     main { max-width: 1100px; }
@@ -46,7 +276,7 @@
 
     .stat-sub { font-size: .78rem; color: var(--muted); margin-top: .3rem; }
 
-    /* Sentiment meter — horizontal gradient slider */
+    /* Sentiment meter - horizontal gradient slider */
     .meter-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -213,187 +443,6 @@
 
     .note-box strong { color: var(--text); }
   </style>
-</head>
-<body>
-
-  <nav>
-    <span class="logo">Fin<span>Cast</span></span>
-
-    <div class="nav-links">
-      <a href="dashboard.html">Dashboard</a>
-      <a href="models.html">Models</a>
-      <a href="sentiment.html" class="active">Sentiment</a>
-    </div>
-
-    <div class="nav-right">
-      <span class="nav-user" id="nav-user"></span>
-      <button class="btn-sm" onclick="logout()">Sign out</button>
-    </div>
-  </nav>
-
-  <main>
-
-    <div class="page-title">
-      <h1>Live Sentiment Feed</h1>
-      <p>Real-time financial news scored with FinBERT (ProsusAI/finbert) — the NLP modality of the multimodal hybrid system.</p>
-    </div>
-
-    <!-- Context note explaining the zero-placeholder used during training -->
-    <div class="note-box">
-      <strong>About this panel:</strong> During model training (2018–2022), historical sentiment was unavailable so a zero placeholder was used.
-      This live feed demonstrates the operational FinBERT pipeline — headlines are fetched from financial RSS feeds and scored in real time.
-      The sentiment score feeds directly into the 19th feature of the model at inference time.
-    </div>
-
-    <!-- Mean score, headline count, and visual meter -->
-    <div class="top-row">
-
-      <div class="stat-card">
-        <div class="stat-label">Mean Sentiment Score</div>
-        <div class="stat-val" id="mean-score">—</div>
-        <div class="stat-sub">−1 = very negative · +1 = very positive</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Headlines Scored</div>
-        <div class="stat-val" id="hl-count">—</div>
-        <div class="stat-sub">from CoinDesk, CryptoPanic, BBC</div>
-      </div>
-
-      <div class="meter-card">
-        <div class="meter-title">Sentiment Meter</div>
-        <div class="meter-big" id="meter-val">—</div>
-        <div class="meter-track">
-          <div class="meter-thumb" id="meter-thumb" style="left: 50%;"></div>
-        </div>
-        <div class="meter-labels">
-          <span>−1 Bearish</span>
-          <span>0 Neutral</span>
-          <span>+1 Bullish</span>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="refresh-row">
-      <button class="btn-refresh" id="btn-fetch" onclick="loadSentiment()">Fetch Headlines</button>
-      <div class="spinner" id="spinner"></div>
-      <span class="ref-status" id="fetch-status">Click to fetch live headlines</span>
-    </div>
-
-    <div class="section-label">Headlines &amp; Scores</div>
-    <div id="headlines-wrap">
-      <div class="empty-state">Click "Fetch Headlines" to load live financial news.</div>
-    </div>
-
-  </main>
-
-  <script>
-    const API   = '/api';
-    const TOKEN = localStorage.getItem('fc_token');
-
-    if (!TOKEN) location.href = 'index.html';
-
-    try {
-      const user = JSON.parse(localStorage.getItem('fc_user') || '{}');
-      document.getElementById('nav-user').textContent = user.username || '';
-    } catch {}
-
-    function logout() {
-      localStorage.removeItem('fc_token');
-      localStorage.removeItem('fc_user');
-      location.href = 'index.html';
-    }
-
-    function authHeaders() {
-      return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
-    }
-
-    function fmt(n, dp = 4) {
-      return n != null && !isNaN(n) ? Number(n).toFixed(dp) : '—';
-    }
-
-    function updateMeter(score) {
-      // Map the -1 to +1 score onto a 0-100% position for the thumb
-      const clamped = Math.max(-1, Math.min(1, score));
-      const pct     = ((clamped + 1) / 2) * 100;
-
-      document.getElementById('meter-thumb').style.left = pct + '%';
-
-      const valEl       = document.getElementById('meter-val');
-      valEl.textContent = (clamped >= 0 ? '+' : '') + clamped.toFixed(4);
-      valEl.style.color = clamped > 0.05 ? 'var(--accent)' : clamped < -0.05 ? 'var(--danger)' : 'var(--muted)';
-    }
-
-    async function loadSentiment() {
-      const btn    = document.getElementById('btn-fetch');
-      const spin   = document.getElementById('spinner');
-      const status = document.getElementById('fetch-status');
-
-      btn.disabled = true;
-      spin.style.display = 'inline-block';
-      status.textContent = 'Fetching and scoring headlines…';
-
-      try {
-        const response = await fetch(`${API}/sentiment/live?max=15`, { headers: authHeaders() });
-
-        if (response.status === 401) { location.href = 'index.html'; return; }
-
-        const data = await response.json();
-
-        if (!response.ok || data.error) {
-          status.textContent = data.error || 'Failed to fetch headlines';
-          document.getElementById('headlines-wrap').innerHTML =
-            `<div class="empty-state">${data.error || 'No headlines available right now.'}</div>`;
-          return;
-        }
-
-        // Update the summary stat cards
-        const scoreEl       = document.getElementById('mean-score');
-        scoreEl.textContent = (data.mean_score >= 0 ? '+' : '') + fmt(data.mean_score, 4);
-        scoreEl.style.color = data.mean_score > 0.05 ? 'var(--accent)' : data.mean_score < -0.05 ? 'var(--danger)' : 'var(--text)';
-
-        document.getElementById('hl-count').textContent = data.count || data.headlines?.length || 0;
-        updateMeter(data.mean_score);
-
-        const items = data.headlines || [];
-
-        if (!items.length) {
-          document.getElementById('headlines-wrap').innerHTML = '<div class="empty-state">No headlines returned.</div>';
-          return;
-        }
-
-        // Render each headline card with its sentiment score and label
-        document.getElementById('headlines-wrap').innerHTML = items.map(h => {
-          const label    = h.label || 'neutral';
-          const score    = h.sentiment || 0;
-          const boxClass = label === 'positive' ? 'pos-box' : label === 'negative' ? 'neg-box' : 'neu-box';
-          const lblClass = label === 'positive' ? 'lbl-positive' : label === 'negative' ? 'lbl-negative' : 'lbl-neutral';
-          const scoreStr = (score >= 0 ? '+' : '') + score.toFixed(4);
-
-          return `<div class="hl-card">
-            <div class="hl-score-box ${boxClass}">${scoreStr}</div>
-            <div class="hl-body">
-              <div class="hl-title">${h.title || 'No title'}</div>
-              <div class="hl-meta">
-                <span class="hl-source">${h.source || 'unknown'}</span>
-                <span class="hl-label ${lblClass}">${label}</span>
-                ${h.link ? `<a class="hl-link" href="${h.link}" target="_blank" rel="noopener">Read →</a>` : ''}
-              </div>
-            </div>
-          </div>`;
-        }).join('');
-
-        status.textContent = 'Last fetched at ' + new Date().toLocaleTimeString();
-
-      } catch (err) {
-        status.textContent = 'Error: ' + err.message;
-      } finally {
-        btn.disabled = false;
-        spin.style.display = 'none';
-      }
-    }
-  </script>
 
 </body>
 </html>

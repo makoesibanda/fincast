@@ -3,13 +3,209 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FinCast — Sign In</title>
+  <title>FinCast - Sign In</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="fincast.css" />
 
+</head>
+<body>
+
+  <!-- The FinCast Logo -->
+  <nav>
+    <span class="logo">Fin<span>Cast</span></span>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-inner">
+
+      <div>
+        <h1 class="headline">Intelligent Engine<br /><em>For Financial Forecasting 
+</em></h1>
+        
+        <!-- Key model stats so users know what the system is capable of (according to the notebook) -->
+        <div class="badges">
+          <span class="badge">GRU Sharpe 2.612</span>
+          <span class="badge">DirAcc 54.19%</span>
+          <span class="badge">MaxDD -18.1%</span>
+          <span class="badge">19 features</span>
+          <span class="badge">FinBERT NLP</span>
+          <span class="badge">HFM Ensemble</span>
+        </div>
+      </div>
+
+      <div class="card">
+
+        <div class="tabs">
+          <button class="tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+          <button class="tab"        id="tab-reg"   onclick="switchTab('reg')">Register</button>
+        </div>
+
+        <!-- Login form -->
+        <form id="form-login" onsubmit="doLogin(event)">
+          <div class="fg">
+            <label>Username</label>
+            <input id="login-username" type="text" placeholder="your username" required autocomplete="username" />
+          </div>
+          <div class="fg">
+            <label>Password</label>
+            <input id="login-password" type="password" placeholder="..........." required autocomplete="current-password" />
+          </div>
+          <button class="btn" type="submit" id="btn-login">Sign In</button>
+          <p class="msg" id="msg-login"></p>
+        </form>
+
+        <!-- Register form / hidden until the user switches tabs -->
+        <form id="form-reg" style="display: none;" onsubmit="doRegister(event)">
+          <div class="fg">
+            <label>Username</label>
+            <input id="reg-username" type="text" placeholder="your_username" required autocomplete="username" />
+          </div>
+          <div class="fg">
+            <label>Email</label>
+            <input id="reg-email" type="email" placeholder="you@example.com" required autocomplete="email" />
+          </div>
+          <div class="fg">
+            <label>Password</label>
+            <input id="reg-password" type="password" placeholder="min 8 characters" required autocomplete="new-password" />
+          </div>
+          <button class="btn" type="submit" id="btn-reg">Create Account</button>
+          <p class="msg" id="msg-reg"></p>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const API = '/api';
+
+    // Skip the login page entirely if a session already exists
+    if (localStorage.getItem('fc_token')) {
+      location.href = 'market.html';
+    }
+
+    function switchTab(tab) {
+      // Toggle which form is visible and which tab is highlighted
+      const isLogin = tab === 'login';
+      document.getElementById('form-login').style.display = isLogin ? '' : 'none';
+      document.getElementById('form-reg').style.display   = isLogin ? 'none' : '';
+      document.getElementById('tab-login').classList.toggle('active', isLogin);
+      document.getElementById('tab-reg').classList.toggle('active', !isLogin);
+    }
+
+    async function doLogin(e) {
+      e.preventDefault();
+
+      const msg = document.getElementById('msg-login');
+      const btn = document.getElementById('btn-login');
+
+      msg.textContent = 'Signing in…';
+      msg.className   = 'msg';
+      btn.disabled    = true;
+
+      try {
+        const response = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('login-username').value.trim(),
+            password: document.getElementById('login-password').value
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          msg.textContent = data.error || 'Login failed';
+          msg.className   = 'msg err';
+          return;
+        }
+
+        // Store token and user info so other pages can access them
+        localStorage.setItem('fc_token', data.token);
+        localStorage.setItem('fc_user',  JSON.stringify(data.user));
+
+        msg.textContent = 'Success!';
+        msg.className   = 'msg ok';
+
+        setTimeout(() => location.href = 'market.html', 500);
+
+      } catch {
+        msg.textContent = 'Network error. Please try again or Refresh the page.';
+        msg.className   = 'msg err';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function doRegister(e) {
+      e.preventDefault();
+
+      const msg = document.getElementById('msg-reg');
+      const btn = document.getElementById('btn-reg');
+
+      msg.textContent = 'Creating account…';
+      msg.className   = 'msg';
+      btn.disabled    = true;
+
+      try {
+        const response = await fetch(`${API}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('reg-username').value.trim(),
+            email:    document.getElementById('reg-email').value.trim().toLowerCase(),
+            password: document.getElementById('reg-password').value
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          msg.textContent = data.error || 'Registration failed';
+          msg.className   = 'msg err';
+          return;
+        }
+
+        msg.textContent = 'Account created! You can now sign in.';
+        msg.className   = 'msg ok';
+
+        // Switch back to login tab after a short delay
+        setTimeout(() => switchTab('login'), 1200);
+
+      } catch {
+        msg.textContent = 'Network error. Please try again.';
+        msg.className   = 'msg err';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+
+  
+<!-- Server status notice - dismissible by the user -->
+<div id="wake-notice" style="
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(245, 158, 11, .12);
+  border-top: 1px solid rgba(245, 158, 11, .35);
+  padding: .55rem 2rem;
+  font-size: .8rem;
+  color: var(--warn);
+  text-align: center;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;">
+  ⚠️ If the app is slow or shows an error on first load, the server may be waking up - wait a few seconds, refresh the page and try again.
+  <span onclick="this.parentElement.style.display='none'"
+    style="cursor: pointer; opacity: .6; font-size: 1rem; flex-shrink: 0;">✕</span>
+</div>
+  
   <style>
     /* Slightly larger grid on the login page for more visual impact */
     body::before {
@@ -171,183 +367,6 @@
     .err { color: var(--danger); }
     .ok  { color: var(--accent); }
   </style>
-</head>
-<body>
-
-  <!-- Nav shows only the logo on the login page -->
-  <nav>
-    <span class="logo">Fin<span>Cast</span></span>
-  </nav>
-
-  <section class="hero">
-    <div class="hero-inner">
-
-      <div>
-        <h1 class="headline">Intelligent<br /><em>BTC Forecasting</em></h1>
-        <p class="sub">
-          GRU-powered daily return prediction with FinBERT sentiment integration.
-          Built for the Goldsmiths BSc Computer Science final year project.
-        </p>
-
-        <!-- Key model stats so users know what the system is capable of -->
-        <div class="badges">
-          <span class="badge">GRU Sharpe 2.612</span>
-          <span class="badge">DirAcc 54.19%</span>
-          <span class="badge">MaxDD −18.1%</span>
-          <span class="badge">19 features</span>
-          <span class="badge">FinBERT NLP</span>
-          <span class="badge">HFM Ensemble</span>
-        </div>
-      </div>
-
-      <div class="card">
-
-        <div class="tabs">
-          <button class="tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
-          <button class="tab"        id="tab-reg"   onclick="switchTab('reg')">Register</button>
-        </div>
-
-        <!-- Login form -->
-        <form id="form-login" onsubmit="doLogin(event)">
-          <div class="fg">
-            <label>Username</label>
-            <input id="login-username" type="text" placeholder="your_username" required autocomplete="username" />
-          </div>
-          <div class="fg">
-            <label>Password</label>
-            <input id="login-password" type="password" placeholder="••••••••" required autocomplete="current-password" />
-          </div>
-          <button class="btn" type="submit" id="btn-login">Sign In</button>
-          <p class="msg" id="msg-login"></p>
-        </form>
-
-        <!-- Register form — hidden until the user switches tabs -->
-        <form id="form-reg" style="display: none;" onsubmit="doRegister(event)">
-          <div class="fg">
-            <label>Username</label>
-            <input id="reg-username" type="text" placeholder="your_username" required autocomplete="username" />
-          </div>
-          <div class="fg">
-            <label>Email</label>
-            <input id="reg-email" type="email" placeholder="you@example.com" required autocomplete="email" />
-          </div>
-          <div class="fg">
-            <label>Password</label>
-            <input id="reg-password" type="password" placeholder="min 8 characters" required autocomplete="new-password" />
-          </div>
-          <button class="btn" type="submit" id="btn-reg">Create Account</button>
-          <p class="msg" id="msg-reg"></p>
-        </form>
-
-      </div>
-    </div>
-  </section>
-
-  <script>
-    const API = '/api';
-
-    // Skip the login page entirely if a session already exists
-    if (localStorage.getItem('fc_token')) {
-      location.href = 'market.html';
-    }
-
-    function switchTab(tab) {
-      // Toggle which form is visible and which tab is highlighted
-      const isLogin = tab === 'login';
-      document.getElementById('form-login').style.display = isLogin ? '' : 'none';
-      document.getElementById('form-reg').style.display   = isLogin ? 'none' : '';
-      document.getElementById('tab-login').classList.toggle('active', isLogin);
-      document.getElementById('tab-reg').classList.toggle('active', !isLogin);
-    }
-
-    async function doLogin(e) {
-      e.preventDefault();
-
-      const msg = document.getElementById('msg-login');
-      const btn = document.getElementById('btn-login');
-
-      msg.textContent = 'Signing in…';
-      msg.className   = 'msg';
-      btn.disabled    = true;
-
-      try {
-        const response = await fetch(`${API}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: document.getElementById('login-username').value.trim(),
-            password: document.getElementById('login-password').value
-          })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          msg.textContent = data.error || 'Login failed';
-          msg.className   = 'msg err';
-          return;
-        }
-
-        // Store token and user info so other pages can access them
-        localStorage.setItem('fc_token', data.token);
-        localStorage.setItem('fc_user',  JSON.stringify(data.user));
-
-        msg.textContent = 'Success!';
-        msg.className   = 'msg ok';
-
-        setTimeout(() => location.href = 'market.html', 500);
-
-      } catch {
-        msg.textContent = 'Network error. Please try again.';
-        msg.className   = 'msg err';
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    async function doRegister(e) {
-      e.preventDefault();
-
-      const msg = document.getElementById('msg-reg');
-      const btn = document.getElementById('btn-reg');
-
-      msg.textContent = 'Creating account…';
-      msg.className   = 'msg';
-      btn.disabled    = true;
-
-      try {
-        const response = await fetch(`${API}/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: document.getElementById('reg-username').value.trim(),
-            email:    document.getElementById('reg-email').value.trim().toLowerCase(),
-            password: document.getElementById('reg-password').value
-          })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          msg.textContent = data.error || 'Registration failed';
-          msg.className   = 'msg err';
-          return;
-        }
-
-        msg.textContent = 'Account created! You can now sign in.';
-        msg.className   = 'msg ok';
-
-        // Switch back to login tab after a short delay
-        setTimeout(() => switchTab('login'), 1200);
-
-      } catch {
-        msg.textContent = 'Network error. Please try again.';
-        msg.className   = 'msg err';
-      } finally {
-        btn.disabled = false;
-      }
-    }
-  </script>
 
 </body>
 </html>

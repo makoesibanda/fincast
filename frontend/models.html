@@ -3,15 +3,389 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FinCast — Model Comparison</title>
+  <title>FinCast - Model Comparison</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="fincast.css" />
 
-  <style>
-    /* Top summary stat cards */
+  
+</head>
+<body>
+
+  <nav>
+    <span class="logo">Fin<span>Cast</span></span>
+
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="models.html" class="active">Models</a>
+      <a href="sentiment.html">Sentiment</a>
+    </div>
+
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <button class="btn-sm" onclick="logout()">Sign out</button>
+    </div>
+  </nav>
+
+  <main>
+
+    <div class="page-title">
+      <h1>Model Comparison</h1>
+      <p>Full evaluation results from the notebook - test set 2024 (held-out). All metrics computed on data the models never saw during training.</p>
+    </div>
+
+    <!-- Top-level summary numbers from the best performing model -->
+    <div class="section-label">Best Results - Test Set 2024</div>
+    <div class="summary-grid">
+      <div class="sum-card">
+        <div class="sum-label">Best Model</div>
+        <div class="sum-val" style="color: var(--accent);">GRU</div>
+        <div class="sum-sub">by Sharpe &amp; DirAcc</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Best Sharpe</div>
+        <div class="sum-val" style="color: var(--accent);">2.612</div>
+        <div class="sum-sub">GRU · test 2024</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Best Dir. Acc.</div>
+        <div class="sum-val" style="color: var(--accent);">54.19%</div>
+        <div class="sum-sub">GRU · test 2024</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Lowest Drawdown</div>
+        <div class="sum-val" style="color: var(--accent);">-18.1%</div>
+        <div class="sum-sub">GRU &amp; HFM</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Walk-Fwd Sharpe</div>
+        <div class="sum-val" style="color: var(--accent);">1.812</div>
+        <div class="sum-sub">mean over 3 windows</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Features</div>
+        <div class="sum-val">19</div>
+        <div class="sum-sub">was 13 in v1</div>
+      </div>
+    </div>
+
+    <!-- Bar charts built dynamically by JS using the MODELS array -->
+    <div class="chart-section">
+      <div class="chart-title">Sharpe Ratio - Test Set 2024</div>
+      <div id="sharpe-chart"></div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-title">Directional Accuracy - Test Set 2024</div>
+      <div id="diracc-chart"></div>
+    </div>
+
+    <!-- Full results table - populated by buildTable() -->
+    <div class="section-label">Full Results Table</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th class="num">Sharpe</th>
+            <th class="num">Dir. Acc</th>
+            <th class="num">Max DD</th>
+            <th class="num">MAE (%)</th>
+            <th class="num">Hit Rate</th>
+          </tr>
+        </thead>
+        <tbody id="results-table"></tbody>
+      </table>
+    </div>
+
+    <!-- Walk-forward validation - tests model on 3 separate unseen time windows -->
+    <div class="section-label">Walk-Forward Validation - 3 x 90-day Windows (2024)</div>
+    <div class="wf-grid">
+      <div class="wf-card">
+        <div class="wf-win">Window 1 · Jan=Mar</div>
+        <div class="wf-sharpe" style="color: var(--accent);">2.948</div>
+        <div class="wf-meta">DirAcc 56.8% · MaxDD -20.3%</div>
+      </div>
+      <div class="wf-card">
+        <div class="wf-win">Window 2 · Apr=Jun</div>
+        <!-- Negative Sharpe here reflects the BTC consolidation period mid-2024 -->
+        <div class="wf-sharpe" style="color: var(--danger);">-1.022</div>
+        <div class="wf-meta">DirAcc 46.8% · MaxDD -24.1%</div>
+      </div>
+      <div class="wf-card">
+        <div class="wf-win">Window 3 · Jul=Dec</div>
+        <div class="wf-sharpe" style="color: var(--accent);">3.511</div>
+        <div class="wf-meta">DirAcc 54.5% · MaxDD -12.7%</div>
+      </div>
+    </div>
+
+    <p class="note-text-sm">
+      Window 2 shows negative Sharpe - consistent with the BTC consolidation period mid-2024.
+      The model is regime-sensitive, which is an acknowledged limitation and area for future work.
+    </p>
+
+    <!-- SHAP results computed with GradientExplainer in the training notebook -->
+    <div class="section-label">SHAP Feature Importance (GradientExplainer)</div>
+    <div class="shap-grid">
+
+      <div class="shap-card">
+        <div class="shap-title">Top 5 Features by Mean |SHAP|</div>
+        <!-- Bars rendered by buildShapBars() using normalised pct values -->
+        <div id="shap-bars"></div>
+        <p class="shap-note">
+          Computed with GradientExplainer over 80 test samples and 100 background samples.
+          Return_7 (a notebook addition) ranking in the top 3 validates the expanded feature set.
+        </p>
+      </div>
+
+      <!-- Explains why sentiment SHAP is zero - important to document this clearly -->
+      <div class="shap-card">
+        <div class="shap-title">Sentiment Feature Analysis</div>
+        <div class="shap-kv">
+          <span class="shap-kv-k">Global rank</span>
+          <span class="shap-kv-v">19 / 19</span>
+        </div>
+        <div class="shap-kv">
+          <span class="shap-kv-k">Mean |SHAP|</span>
+          <span class="shap-kv-v">0.00000</span>
+        </div>
+        <div class="shap-kv">
+          <span class="shap-kv-k">Training value</span>
+          <span class="shap-kv-v">0.0 (placeholder)</span>
+        </div>
+        <p class="shap-note" style="margin-top: .75rem;">
+          Sentiment was 0.0 during training (2018=2022) because real historical news archives are not freely available.
+          The FinBERT pipeline is fully operational for live inference - real sentiment is fetched and scored at prediction time.
+          Zero training SHAP is expected and acknowledged as a project limitation.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- HFM experiment - shows the grid search results that determined model weights -->
+    <div class="section-label">Hybrid Fusion Model (HFM) - Ensemble Experiment</div>
+    <div class="table-wrap" style="margin-bottom: 2rem;">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th class="num">Sharpe</th>
+            <th class="num">Dir. Acc</th>
+            <th class="num">Max DD</th>
+            <th class="num">Weight</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="best-row">
+            <td class="name">GRU <span class="tag tag-primary">primary</span></td>
+            <td class="num" style="color: var(--accent);">2.612</td>
+            <td class="num">54.19%</td>
+            <td class="num">-18.10%</td>
+            <td class="num">0.9</td>
+            <td style="font-size: .78rem; color: var(--muted);">Grid search optimal</td>
+          </tr>
+          <tr>
+            <td class="name">Transformer</td>
+            <td class="num">1.834</td>
+            <td class="num">52.69%</td>
+            <td class="num">-26.20%</td>
+            <td class="num">0.1</td>
+            <td style="font-size: .78rem; color: var(--muted);">Long-range patterns</td>
+          </tr>
+          <tr>
+            <td class="name">Linear Regression</td>
+            <td class="num">1.171</td>
+            <td class="num">53.30%</td>
+            <td class="num">-33.70%</td>
+            <td class="num">0.0</td>
+            <td style="font-size: .78rem; color: var(--muted);">Grid search: excluded</td>
+          </tr>
+          <!-- HFM row separated with a border to distinguish from individual models -->
+          <tr style="border-top: 2px solid var(--border);">
+            <td class="name">HFM (Fusion) <span class="tag tag-best">ensemble</span></td>
+            <td class="num">2.209</td>
+            <td class="num">52.40%</td>
+            <td class="num">-18.10%</td>
+            <td class="num">-</td>
+            <td style="font-size: .78rem; color: var(--muted);">GRU-dominated</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note-text">
+      The ensemble weights were tuned via grid search on the 2023 validation set to maximise Sharpe ratio.
+      The optimal weights (GRU=0.9, LR=0.0, TF=0.1) confirm that GRU dominates the available signal -
+      the algorithm assigned zero weight to Linear Regression. This provides empirical evidence that GRU
+      captures the majority of the predictable structure in daily BTC returns on this dataset.
+    </p>
+
+  </main>
+
+  <script>
+    const TOKEN = localStorage.getItem('fc_token');
+    if (!TOKEN) location.href = 'index.html';
+
+    try {
+      const user = JSON.parse(localStorage.getItem('fc_user') || '{}');
+      document.getElementById('nav-user').textContent = user.username || '';
+    } catch {}
+
+    function logout() {
+      localStorage.removeItem('fc_token');
+      localStorage.removeItem('fc_user');
+      location.href = 'index.html';
+    }
+
+    // All model results from the notebook run- 2024 held-out test set
+    // Fixed evaluation results, not recalculated at runtime
+    const MODELS = [
+      { name: 'Linear Regression', sharpe:  1.171, dir_acc: 53.30, max_dd: -33.70, mae: 2.0212, hit_rate: 53.20 },
+      { name: 'Random Forest',     sharpe:  0.495, dir_acc: 48.90, max_dd: -44.70, mae: 2.0887, hit_rate: 48.80 },
+      { name: 'XGBoost',           sharpe: -0.323, dir_acc: 47.80, max_dd: -54.70, mae: 2.3830, hit_rate: 47.70 },
+      { name: 'LSTM',              sharpe:  1.834, dir_acc: 52.69, max_dd: -26.20, mae: 2.0417, hit_rate: 52.60 },
+      { name: 'GRU',               sharpe:  2.612, dir_acc: 54.19, max_dd: -18.10, mae: 2.0305, hit_rate: 54.10, best: true },
+      { name: '1D-CNN',            sharpe:  1.834, dir_acc: 52.69, max_dd: -26.20, mae: 2.0424, hit_rate: 52.60 },
+      { name: 'Transformer',       sharpe:  1.834, dir_acc: 52.69, max_dd: -26.20, mae: 2.0414, hit_rate: 52.60 },
+      { name: 'Hybrid LSTM+TF',    sharpe:  1.834, dir_acc: 52.69, max_dd: -26.20, mae: 2.0453, hit_rate: 52.60 },
+      { name: 'Multimodal Hybrid', sharpe:  1.834, dir_acc: 52.69, max_dd: -26.20, mae: 2.0423, hit_rate: 52.60 },
+      { name: 'HFM (Fusion)',      sharpe:  2.209, dir_acc: 52.40, max_dd: -18.10, mae: 2.0313, hit_rate: 52.30 },
+    ];
+
+    // SHAP values normalised to 100 - top feature always gets 100, others are relative
+    const SHAP_FEATURES = [
+      { feat: 'Volume_Change', pct: 100 },
+      { feat: 'MACD_Signal',   pct: 88  },
+      { feat: 'Return_7',      pct: 75  },
+      { feat: 'BB_Pos',        pct: 61  },
+      { feat: 'RSI_14',        pct: 54  },
+    ];
+
+    function buildSharpeChart() {
+      // Sort ascending so the best model appears at the bottom
+      const maxAbs = Math.max(...MODELS.map(m => Math.abs(m.sharpe)));
+      const sorted = [...MODELS].sort((a, b) => a.sharpe - b.sharpe);
+
+      document.getElementById('sharpe-chart').innerHTML = sorted.map(m => {
+        const pct = Math.abs(m.sharpe) / maxAbs * 100;
+        // Red for negative Sharpe, green for the best, blue for everything else
+        const color = m.sharpe < 0 ? 'var(--danger)' : m.best ? 'var(--accent)' : '#0ea5e9';
+
+        return `<div class="bar-row">
+          <div class="bar-label">${m.name}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: ${pct}%; background: ${color}; opacity: .85;"></div>
+            <span class="bar-num">${m.sharpe.toFixed(3)}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function buildDirAccChart() {
+      const sorted = [...MODELS].sort((a, b) => a.dir_acc - b.dir_acc);
+
+      document.getElementById('diracc-chart').innerHTML = sorted.map(m => {
+        // Scale against 60% so small differences between models are visible
+        const pct   = (m.dir_acc / 60) * 100;
+        const color = m.best ? 'var(--accent)' : m.dir_acc >= 52 ? '#0ea5e9' : 'var(--muted2)';
+
+        return `<div class="bar-row">
+          <div class="bar-label">${m.name}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: ${pct}%; background: ${color}; opacity: .85;"></div>
+            <span class="bar-num">${m.dir_acc.toFixed(2)}%</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function buildTable() {
+      document.getElementById('results-table').innerHTML = MODELS.map(m => {
+        const sharpeColor = m.sharpe > 2 ? 'color: var(--accent);' : m.sharpe < 0 ? 'color: var(--danger);' : '';
+        const rowClass    = m.best ? 'best-row' : '';
+        const bestTag     = m.best ? '<span class="tag tag-best">best</span>' : '';
+
+        return `<tr class="${rowClass}">
+          <td class="name">${m.name}${bestTag}</td>
+          <td class="num" style="${sharpeColor}">${m.sharpe.toFixed(3)}</td>
+          <td class="num">${m.dir_acc.toFixed(2)}%</td>
+          <td class="num" style="color: var(--danger);">${m.max_dd.toFixed(2)}%</td>
+          <td class="num">${m.mae.toFixed(4)}</td>
+          <td class="num">${m.hit_rate.toFixed(2)}%</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function buildShapBars() {
+      // pct is normalised so the top feature always fills 100% of the bar track
+      document.getElementById('shap-bars').innerHTML = SHAP_FEATURES.map((s, i) => `
+        <div class="shap-row">
+          <span class="shap-rank">${i + 1}.</span>
+          <span class="shap-feat">${s.feat}</span>
+          <div class="shap-bar-track">
+            <div class="shap-bar-fill" style="width: ${s.pct}%;"></div>
+          </div>
+        </div>`).join('');
+    }
+
+    // Render everything on page load
+    buildSharpeChart();
+    buildDirAccChart();
+    buildTable();
+    buildShapBars();
+  </script>
+
+<!-- One-time notice modal shown when the page first opens -->
+<div id="tech-notice" style="
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999; backdrop-filter: blur(6px);">
+
+  <div style="
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;">
+
+    <div style="font-size: 2rem; margin-bottom: 1rem;">📊</div>
+
+    <h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: .75rem;">
+      This page is for technical users
+    </h2>
+
+    <p style="font-size: .88rem; color: var(--muted); line-height: 1.75; margin-bottom: 1.5rem;">
+      This section contains detailed ML and deep learning evaluation results -
+      including Sharpe ratios, directional accuracy, walk-forward validation,
+      and SHAP feature importance. It is intended for users who are familiar
+      with model evaluation concepts. If you are just looking for forecasts,
+      head back to the <a href="dashboard.html" style="color: var(--accent); text-decoration: none;">Dashboard</a>.
+    </p>
+
+    <button onclick="document.getElementById('tech-notice').style.display='none'" style="
+      padding: .65rem 2rem;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;">
+      Okay, I understand
+    </button>
+
+  </div>
+</div>
+
+
+<style>
+    /* Summary stat cards at the top of the page */
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -40,13 +414,9 @@
       font-family: 'Space Mono', monospace;
     }
 
-    .sum-sub {
-      font-size: .76rem;
-      color: var(--muted);
-      margin-top: .25rem;
-    }
+    .sum-sub { font-size: .76rem; color: var(--muted); margin-top: .25rem; }
 
-    /* Horizontal bar chart panels */
+    /* Container for each horizontal bar chart */
     .chart-section {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -65,7 +435,6 @@
       font-family: 'Space Mono', monospace;
     }
 
-    /* Each row in the horizontal bar chart */
     .bar-row {
       display: flex;
       align-items: center;
@@ -98,7 +467,7 @@
       transition: width .6s ease;
     }
 
-    /* Value label at the right end of each bar */
+    /* Absolute positioned so it sits on top of the bar fill */
     .bar-num {
       font-size: .75rem;
       font-family: 'Space Mono', monospace;
@@ -116,10 +485,8 @@
     tbody td.name { font-family: 'DM Sans', sans-serif; font-size: .85rem; }
     tbody td.num  { text-align: right; }
 
-    /* Highlight the best-performing model row */
-    tbody tr.best-row td {
-      background: rgba(0, 212, 170, .05);
-    }
+    /* Highlight the winning model row */
+    tbody tr.best-row td { background: rgba(0, 212, 170, .05); }
 
     .tag {
       padding: .1rem .45rem;
@@ -133,7 +500,7 @@
     .tag-best    { background: rgba(0, 212, 170, .15); color: var(--accent); }
     .tag-primary { background: rgba(14, 165, 233, .15); color: #0ea5e9; }
 
-    /* Walk-forward validation 3-window grid */
+    /* Walk-forward cards - one per validation window */
     .wf-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -168,7 +535,7 @@
 
     .wf-meta { font-size: .78rem; color: var(--muted); margin-top: .3rem; }
 
-    /* SHAP feature importance section */
+    /* SHAP section - two cards side by side */
     .shap-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -243,334 +610,9 @@
     .shap-kv-k { color: var(--muted); }
     .shap-kv-v { font-family: 'Space Mono', monospace; }
 
-    .note-text {
-      font-size: .82rem;
-      color: var(--muted);
-      line-height: 1.7;
-      margin-bottom: 2rem;
-    }
-
-    .note-text-sm {
-      font-size: .8rem;
-      color: var(--muted);
-      margin-bottom: 1.5rem;
-    }
+    .note-text    { font-size: .82rem; color: var(--muted); line-height: 1.7; margin-bottom: 2rem; }
+    .note-text-sm { font-size: .8rem;  color: var(--muted); margin-bottom: 1.5rem; }
   </style>
-</head>
-<body>
-
-  <nav>
-    <span class="logo">Fin<span>Cast</span></span>
-
-    <div class="nav-links">
-      <a href="dashboard.html">Dashboard</a>
-      <a href="models.html" class="active">Models</a>
-      <a href="sentiment.html">Sentiment</a>
-    </div>
-
-    <div class="nav-right">
-      <span class="nav-user" id="nav-user"></span>
-      <button class="btn-sm" onclick="logout()">Sign out</button>
-    </div>
-  </nav>
-
-  <main>
-
-    <div class="page-title">
-      <h1>Model Comparison</h1>
-      <p>Full evaluation results from the v2 notebook — test set 2024 (held-out). All metrics computed on data the models never saw during training.</p>
-    </div>
-
-    <div class="section-label">Best Results — Test Set 2024</div>
-    <div class="summary-grid">
-      <div class="sum-card">
-        <div class="sum-label">Best Model</div>
-        <div class="sum-val" style="color: var(--accent);">GRU</div>
-        <div class="sum-sub">by Sharpe &amp; DirAcc</div>
-      </div>
-      <div class="sum-card">
-        <div class="sum-label">Best Sharpe</div>
-        <div class="sum-val" style="color: var(--accent);">2.612</div>
-        <div class="sum-sub">GRU · test 2024</div>
-      </div>
-      <div class="sum-card">
-        <div class="sum-label">Best Dir. Acc.</div>
-        <div class="sum-val" style="color: var(--accent);">54.19%</div>
-        <div class="sum-sub">GRU · test 2024</div>
-      </div>
-      <div class="sum-card">
-        <div class="sum-label">Lowest Drawdown</div>
-        <div class="sum-val" style="color: var(--accent);">−18.1%</div>
-        <div class="sum-sub">GRU &amp; HFM</div>
-      </div>
-      <div class="sum-card">
-        <div class="sum-label">Walk-Fwd Sharpe</div>
-        <div class="sum-val" style="color: var(--accent);">1.812</div>
-        <div class="sum-sub">mean over 3 windows</div>
-      </div>
-      <div class="sum-card">
-        <div class="sum-label">Features (v2)</div>
-        <div class="sum-val">19</div>
-        <div class="sum-sub">was 13 in v1</div>
-      </div>
-    </div>
-
-    <!-- Sharpe and accuracy bar charts built by JS below -->
-    <div class="chart-section">
-      <div class="chart-title">Sharpe Ratio — Test Set 2024</div>
-      <div id="sharpe-chart"></div>
-    </div>
-
-    <div class="chart-section">
-      <div class="chart-title">Directional Accuracy — Test Set 2024</div>
-      <div id="diracc-chart"></div>
-    </div>
-
-    <div class="section-label">Full Results Table</div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Model</th>
-            <th class="num">Sharpe</th>
-            <th class="num">Dir. Acc</th>
-            <th class="num">Max DD</th>
-            <th class="num">MAE (%)</th>
-            <th class="num">Hit Rate</th>
-          </tr>
-        </thead>
-        <tbody id="results-table"></tbody>
-      </table>
-    </div>
-
-    <!-- Walk-forward validation over 3 × 90-day windows in 2024 -->
-    <div class="section-label">Walk-Forward Validation — 3 × 90-day Windows (2024)</div>
-    <div class="wf-grid">
-      <div class="wf-card">
-        <div class="wf-win">Window 1 · Jan–Mar</div>
-        <div class="wf-sharpe" style="color: var(--accent);">2.948</div>
-        <div class="wf-meta">DirAcc 56.8% · MaxDD −20.3%</div>
-      </div>
-      <div class="wf-card">
-        <div class="wf-win">Window 2 · Apr–Jun</div>
-        <div class="wf-sharpe" style="color: var(--danger);">−1.022</div>
-        <div class="wf-meta">DirAcc 46.8% · MaxDD −24.1%</div>
-      </div>
-      <div class="wf-card">
-        <div class="wf-win">Window 3 · Jul–Dec</div>
-        <div class="wf-sharpe" style="color: var(--accent);">3.511</div>
-        <div class="wf-meta">DirAcc 54.5% · MaxDD −12.7%</div>
-      </div>
-    </div>
-
-    <p class="note-text-sm">
-      Window 2 shows negative Sharpe — consistent with the BTC consolidation period mid-2024.
-      The model is regime-sensitive, which is an acknowledged limitation and area for future work.
-    </p>
-
-    <div class="section-label">SHAP Feature Importance (GradientExplainer)</div>
-    <div class="shap-grid">
-
-      <div class="shap-card">
-        <div class="shap-title">Top 5 Features by Mean |SHAP|</div>
-        <div id="shap-bars"></div>
-        <p class="shap-note">
-          Computed with GradientExplainer over 80 test samples and 100 background samples.
-          Return_7 (a v2 addition) ranking in the top 3 validates the expanded feature set.
-        </p>
-      </div>
-
-      <div class="shap-card">
-        <div class="shap-title">Sentiment Feature Analysis</div>
-        <div class="shap-kv">
-          <span class="shap-kv-k">Global rank</span>
-          <span class="shap-kv-v">19 / 19</span>
-        </div>
-        <div class="shap-kv">
-          <span class="shap-kv-k">Mean |SHAP|</span>
-          <span class="shap-kv-v">0.00000</span>
-        </div>
-        <div class="shap-kv">
-          <span class="shap-kv-k">Training value</span>
-          <span class="shap-kv-v">0.0 (placeholder)</span>
-        </div>
-        <p class="shap-note" style="margin-top: .75rem;">
-          Sentiment was 0.0 during training (2018–2022) because real historical news archives are not freely available.
-          The FinBERT pipeline is fully operational for live inference — real sentiment is fetched and scored at prediction time.
-          Zero training SHAP is expected and acknowledged as a project limitation.
-        </p>
-      </div>
-
-    </div>
-
-    <div class="section-label">Hybrid Fusion Model (HFM) — Ensemble Experiment</div>
-    <div class="table-wrap" style="margin-bottom: 2rem;">
-      <table>
-        <thead>
-          <tr>
-            <th>Model</th>
-            <th class="num">Sharpe</th>
-            <th class="num">Dir. Acc</th>
-            <th class="num">Max DD</th>
-            <th class="num">Weight</th>
-            <th>Note</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="best-row">
-            <td class="name">GRU <span class="tag tag-primary">primary</span></td>
-            <td class="num" style="color: var(--accent);">2.612</td>
-            <td class="num">54.19%</td>
-            <td class="num">−18.10%</td>
-            <td class="num">0.9</td>
-            <td style="font-size: .78rem; color: var(--muted);">Grid search optimal</td>
-          </tr>
-          <tr>
-            <td class="name">Transformer</td>
-            <td class="num">1.834</td>
-            <td class="num">52.69%</td>
-            <td class="num">−26.20%</td>
-            <td class="num">0.1</td>
-            <td style="font-size: .78rem; color: var(--muted);">Long-range patterns</td>
-          </tr>
-          <tr>
-            <td class="name">Linear Regression</td>
-            <td class="num">1.171</td>
-            <td class="num">53.30%</td>
-            <td class="num">−33.70%</td>
-            <td class="num">0.0</td>
-            <td style="font-size: .78rem; color: var(--muted);">Grid search: excluded</td>
-          </tr>
-          <tr style="border-top: 2px solid var(--border);">
-            <td class="name">HFM (Fusion) <span class="tag tag-best">ensemble</span></td>
-            <td class="num">2.209</td>
-            <td class="num">52.40%</td>
-            <td class="num">−18.10%</td>
-            <td class="num">—</td>
-            <td style="font-size: .78rem; color: var(--muted);">GRU-dominated</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p class="note-text">
-      The ensemble weights were tuned via grid search on the 2023 validation set to maximise Sharpe ratio.
-      The optimal weights (GRU=0.9, LR=0.0, TF=0.1) confirm that GRU dominates the available signal —
-      the algorithm assigned zero weight to Linear Regression. This provides empirical evidence that GRU
-      captures the majority of the predictable structure in daily BTC returns on this dataset.
-    </p>
-
-  </main>
-
-  <script>
-    const TOKEN = localStorage.getItem('fc_token');
-    if (!TOKEN) location.href = 'index.html';
-
-    try {
-      const user = JSON.parse(localStorage.getItem('fc_user') || '{}');
-      document.getElementById('nav-user').textContent = user.username || '';
-    } catch {}
-
-    function logout() {
-      localStorage.removeItem('fc_token');
-      localStorage.removeItem('fc_user');
-      location.href = 'index.html';
-    }
-
-    // Model results from the v2 notebook test set (2024 held-out data)
-    const MODELS = [
-      { name: 'Linear Regression', sharpe:  1.171, dir_acc: 53.30, max_dd: -33.70, mae: 2.0212, hit_rate: 53.20 },
-      { name: 'Random Forest',     sharpe:  0.495, dir_acc: 48.90, max_dd: -44.70, mae: 2.0887, hit_rate: 48.80 },
-      { name: 'XGBoost',           sharpe: -0.323, dir_acc: 47.80, max_dd: -54.70, mae: 2.3830, hit_rate: 47.70 },
-      { name: 'LSTM',              sharpe:  1.834, dir_acc: 52.69, max_dd: -26.20, mae: 2.0417, hit_rate: 52.60 },
-      { name: 'GRU',               sharpe:  2.612, dir_acc: 54.19, max_dd: -18.10, mae: 2.0305, hit_rate: 54.10, best: true },
-      { name: '1D-CNN',            sharpe:  1.834, dir_acc: 52.69, max_dd: -26.20, mae: 2.0424, hit_rate: 52.60 },
-      { name: 'Transformer',       sharpe:  1.834, dir_acc: 52.69, max_dd: -26.20, mae: 2.0414, hit_rate: 52.60 },
-      { name: 'Hybrid LSTM+TF',    sharpe:  1.834, dir_acc: 52.69, max_dd: -26.20, mae: 2.0453, hit_rate: 52.60 },
-      { name: 'Multimodal Hybrid', sharpe:  1.834, dir_acc: 52.69, max_dd: -26.20, mae: 2.0423, hit_rate: 52.60 },
-      { name: 'HFM (Fusion)',      sharpe:  2.209, dir_acc: 52.40, max_dd: -18.10, mae: 2.0313, hit_rate: 52.30 },
-    ];
-
-    // SHAP top 5 features normalised to 100 for the bar chart
-    const SHAP_FEATURES = [
-      { feat: 'Volume_Change', pct: 100 },
-      { feat: 'MACD_Signal',   pct: 88  },
-      { feat: 'Return_7',      pct: 75  },
-      { feat: 'BB_Pos',        pct: 61  },
-      { feat: 'RSI_14',        pct: 54  },
-    ];
-
-    function buildSharpeChart() {
-      // Sort lowest to highest so the best model appears at the bottom
-      const maxAbs  = Math.max(...MODELS.map(m => Math.abs(m.sharpe)));
-      const sorted  = [...MODELS].sort((a, b) => a.sharpe - b.sharpe);
-
-      document.getElementById('sharpe-chart').innerHTML = sorted.map(m => {
-        const pct   = Math.abs(m.sharpe) / maxAbs * 100;
-        const color = m.sharpe < 0 ? 'var(--danger)' : m.best ? 'var(--accent)' : '#0ea5e9';
-
-        return `<div class="bar-row">
-          <div class="bar-label">${m.name}</div>
-          <div class="bar-track">
-            <div class="bar-fill" style="width: ${pct}%; background: ${color}; opacity: .85;"></div>
-            <span class="bar-num">${m.sharpe.toFixed(3)}</span>
-          </div>
-        </div>`;
-      }).join('');
-    }
-
-    function buildDirAccChart() {
-      const sorted = [...MODELS].sort((a, b) => a.dir_acc - b.dir_acc);
-
-      document.getElementById('diracc-chart').innerHTML = sorted.map(m => {
-        // Scale bar against 60% max so differences are visible
-        const pct   = (m.dir_acc / 60) * 100;
-        const color = m.best ? 'var(--accent)' : m.dir_acc >= 52 ? '#0ea5e9' : 'var(--muted2)';
-
-        return `<div class="bar-row">
-          <div class="bar-label">${m.name}</div>
-          <div class="bar-track">
-            <div class="bar-fill" style="width: ${pct}%; background: ${color}; opacity: .85;"></div>
-            <span class="bar-num">${m.dir_acc.toFixed(2)}%</span>
-          </div>
-        </div>`;
-      }).join('');
-    }
-
-    function buildTable() {
-      document.getElementById('results-table').innerHTML = MODELS.map(m => {
-        const sharpeColor = m.sharpe > 2 ? 'color: var(--accent);' : m.sharpe < 0 ? 'color: var(--danger);' : '';
-        const rowClass    = m.best ? 'best-row' : '';
-        const bestTag     = m.best ? '<span class="tag tag-best">best</span>' : '';
-
-        return `<tr class="${rowClass}">
-          <td class="name">${m.name}${bestTag}</td>
-          <td class="num" style="${sharpeColor}">${m.sharpe.toFixed(3)}</td>
-          <td class="num">${m.dir_acc.toFixed(2)}%</td>
-          <td class="num" style="color: var(--danger);">${m.max_dd.toFixed(2)}%</td>
-          <td class="num">${m.mae.toFixed(4)}</td>
-          <td class="num">${m.hit_rate.toFixed(2)}%</td>
-        </tr>`;
-      }).join('');
-    }
-
-    function buildShapBars() {
-      document.getElementById('shap-bars').innerHTML = SHAP_FEATURES.map((s, i) => `
-        <div class="shap-row">
-          <span class="shap-rank">${i + 1}.</span>
-          <span class="shap-feat">${s.feat}</span>
-          <div class="shap-bar-track">
-            <div class="shap-bar-fill" style="width: ${s.pct}%;"></div>
-          </div>
-        </div>`).join('');
-    }
-
-    // Build all charts and tables when the page loads
-    buildSharpeChart();
-    buildDirAccChart();
-    buildTable();
-    buildShapBars();
-  </script>
 
 </body>
 </html>

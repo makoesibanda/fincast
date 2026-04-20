@@ -3,17 +3,685 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FinCast — Dashboard</title>
+  <title>FinCast - Dashboard</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- Chart.js for the 60-day historical price chart (FR2) -->
+  <!-- Chart.js for the 60-day historical price chart  -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <link rel="stylesheet" href="fincast.css" />
 
+  
+</head>
+<body>
+
+  <!-- Ethical use disclaimer - NFR5 requirement, must appear on every page -->
+  <div class="disclaimer">
+    ⚠️ For educational and decision-support purposes only. This is not financial advice. Past performance does not guarantee future results.
+  </div>
+
+  <nav>
+    <span class="logo">Fin<span>Cast</span></span>
+
+    <div class="nav-links">
+      <a href="market.html">← Markets</a>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="models.html">Models</a>
+      <a href="sentiment.html">Sentiment</a>
+    </div>
+
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <button class="btn-sm" onclick="logout()">Sign out</button>
+    </div>
+  </nav>
+
+  <main>
+
+    <div class="alert err" id="err-alert"></div>
+
+    <!-- Run prediction button -->
+    <div class="pred-bar">
+      <button class="btn-predict" id="btn-predict" onclick="runPrediction()">
+        <span>Run Prediction</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+      <span class="status" id="status-text">BTC-USD · Hybrid Fusion Model (GRU 90% + TF 10%)</span>
+    </div>
+
+    <!-- 60-day price chart - gives the user market context before the forecast  -->
+    <div class="chart-panel">
+      <div class="chart-header">
+        <h3>Historical Price Context - BTC-USD</h3>
+        <span class="chart-range">Last 60 days</span>
+      </div>
+      <div class="chart-wrap">
+        <p class="chart-loading" id="chart-loading">Loading price history…</p>
+        <canvas id="price-chart" style="display: none;"></canvas>
+      </div>
+    </div>
+
+    <!-- Four summary metric cards -->
+    <div class="metrics">
+
+      <div class="metric">
+        <div class="m-label">Current Price</div>
+        <div class="m-val neutral" id="metric-current">***</div>
+        <div class="m-sub" id="metric-ticker">BTC-USD</div>
+      </div>
+
+      <div class="metric">
+        <div class="m-label">Predicted Price (next day)</div>
+        <div class="m-val" id="metric-predicted">***</div>
+        <div class="m-sub" id="metric-return">est. return</div>
+      </div>
+
+      <!-- Confidence gauge - animates after each prediction -->
+      <div class="metric" style="display: flex; flex-direction: column; gap: .5rem;">
+        <div class="m-label">Direction &amp; Confidence</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 180 100" id="gauge-svg">
+            <path d="M20,90 A70,70 0 0,1 160,90" fill="none" stroke="#1e2630" stroke-width="14" stroke-linecap="round" />
+            <path d="M20,90 A70,70 0 0,1 160,90" fill="none" stroke="#00d4aa" stroke-width="14"
+                  stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220" id="gauge-arc"
+                  style="transition: stroke-dashoffset .6s ease;" />
+            <circle cx="90" cy="90" r="6" fill="#00d4aa" id="gauge-dot" />
+            <line x1="90" y1="90" x2="90" y2="28" stroke="#00d4aa" stroke-width="3"
+                  stroke-linecap="round" id="gauge-needle"
+                  style="transform-origin: 90px 90px; transform: rotate(0deg); transition: transform .6s ease;" />
+          </svg>
+          <div class="gauge-val" id="gauge-value">***</div>
+          <div class="gauge-label" id="gauge-label">run a prediction</div>
+        </div>
+      </div>
+
+      <div class="metric">
+        <div class="m-label">Market Mood</div>
+        <div class="m-val neutral" id="metric-vol">***</div>
+        <div class="m-sub" id="metric-vol-desc">—</div>
+      </div>
+
+    </div>
+
+    <!-- Two info cards: latest forecast details and reliability info -->
+    <div class="info-grid">
+
+      <!-- Latest forecast shown in readable terms -->
+      <div class="info-card">
+        <div class="ic-title">Your Latest Forecast</div>
+        <div class="kv"><span class="kv-k">Instrument</span>          <span class="kv-v" id="detail-ticker">***</span></div>
+        <div class="kv"><span class="kv-k">Direction</span>           <span class="kv-v" id="detail-direction">***</span></div>
+        <div class="kv"><span class="kv-k">Confidence</span>          <span class="kv-v" id="detail-confidence">***</span></div>
+        <div class="kv"><span class="kv-k">News sentiment</span>      <span class="kv-v" id="detail-sentiment">***</span></div>
+        <div class="kv"><span class="kv-k">Forecast time (UTC)</span> <span class="kv-v" id="detail-timestamp" style="font-size: .72rem;">***</span></div>
+      </div>
+
+      <!-- How reliable is this - written for non-technical users -->
+      <div class="info-card">
+        <div class="ic-title">How Reliable Is This?</div>
+        <div class="kv">
+          <span class="kv-k">Correct direction</span>
+          <span class="kv-v" style="color: var(--accent);">54.19% of the time</span>
+        </div>
+        <div class="kv">
+          <span class="kv-k">Tested on</span>
+          <span class="kv-v">Full year 2024 data</span>
+        </div>
+        <div class="kv">
+          <span class="kv-k">Risk-adjusted return</span>
+          <span class="kv-v" style="color: var(--accent);">For every $1 of risk, it made $2.61</span>
+
+        </div>
+        <div class="kv">
+          <span class="kv-k">Worst losing run</span>
+          <span class="kv-v" style="color: var(--danger);">Worst bad streak: lost 18 cents per dollar</span>
+        </div>
+        <div class="kv">
+          <span class="kv-k">Remember</span>
+          <span class="kv-v" style="color: var(--warn);">Not financial advice</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Why did the model predict this SECTION -->
+    <!-- Built dynamically from real prediction values every time -
+         direction, confidence, volatility and sentiment all shape the text -->
+    <div class="explain-card">
+      <div class="ic-title">Why did the model predict this?</div>
+      <p class="explain-text" id="explain-text">
+        <span class="explain-placeholder">Run a prediction above to see a plain-language explanation of what drove the forecast.</span>
+      </p>
+    </div>
+
+    <!-- SHAP feature importance - exact values from GradientExplainer in training notebook -->
+<div class="info-card" style="margin-bottom: 1.5rem;">
+  <div class="ic-title">What did the model look at?</div>
+  <p style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:.9rem;">
+    These are the signals the model found most useful, ranked by how much each one influenced the prediction. Longer bar = bigger impact.
+  </p>
+
   <style>
+    .shap-row-d { display:flex; align-items:center; gap:.6rem; margin-bottom:.45rem; flex-wrap:wrap; }
+    .shap-name  { font-size:.75rem; font-family:'Space Mono',monospace; width:130px; flex-shrink:0; }
+    .shap-desc  { font-size:.72rem; color:var(--muted); flex:1; min-width:100px; }
+    .shap-track { width:100%; height:6px; background:var(--border2); border-radius:3px; margin-top:.2rem; }
+    .shap-fill  { height:100%; border-radius:3px; background:var(--accent); }
+  </style>
+
+  <div class="shap-row-d"><span class="shap-name">Return_14</span><span class="shap-desc">14-day price change</span><div class="shap-track"><div class="shap-fill" style="width:100%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">MACD_Signal</span><span class="shap-desc">Speed and direction of momentum</span><div class="shap-track"><div class="shap-fill" style="width:77%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">Return_7</span><span class="shap-desc">7-day price change</span><div class="shap-track"><div class="shap-fill" style="width:77%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">Vol_ratio</span><span class="shap-desc">Recent vs longer-term volatility</span><div class="shap-track"><div class="shap-fill" style="width:74%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">EMA_ratio</span><span class="shap-desc">Short vs long-term trend</span><div class="shap-track"><div class="shap-fill" style="width:49%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">Volume_Change</span><span class="shap-desc">How much trading activity changed</span><div class="shap-track"><div class="shap-fill" style="width:49%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">MACD_Hist</span><span class="shap-desc">Momentum vs its own average</span><div class="shap-track"><div class="shap-fill" style="width:48%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">MACD</span><span class="shap-desc">Raw momentum indicator</span><div class="shap-track"><div class="shap-fill" style="width:45%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">RSI_14</span><span class="shap-desc">Whether BTC is overbought or oversold</span><div class="shap-track"><div class="shap-fill" style="width:35%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">BB_Pos</span><span class="shap-desc">Where price sits in its recent range</span><div class="shap-track"><div class="shap-fill" style="width:33%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">Price_vs_SMA21</span><span class="shap-desc">Price vs 21-day average</span><div class="shap-track"><div class="shap-fill" style="width:21%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">Return_3</span><span class="shap-desc">3-day price change</span><div class="shap-track"><div class="shap-fill" style="width:18%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">Return</span><span class="shap-desc">Yesterday's price change</span><div class="shap-track"><div class="shap-fill" style="width:16%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">Log_Return</span><span class="shap-desc">Daily price change (precise scale)</span><div class="shap-track"><div class="shap-fill" style="width:15%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">BB_Width</span><span class="shap-desc">How wide the price range has been</span><div class="shap-track"><div class="shap-fill" style="width:10%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">Vol_7</span><span class="shap-desc">How much price jumped this week</span><div class="shap-track"><div class="shap-fill" style="width:8%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">Price_vs_SMA7</span><span class="shap-desc">Price vs 7-day average</span><div class="shap-track"><div class="shap-fill" style="width:6%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">ATR_14</span><span class="shap-desc">Average daily price swing size</span><div class="shap-track"><div class="shap-fill" style="width:5%"></div></div></div>
+  <div class="shap-row-d"><span class="shap-name">Sentiment</span><span class="shap-desc">News mood - live at prediction time</span><div class="shap-track"><div class="shap-fill" style="width:1%;background:var(--muted)"></div></div></div>
+</div>
+
+    <!-- Currency converter - amount pre-fills with the predicted price after a run -->
+    <!-- Uses open.er-api.com free API -->
+    <div class="converter-card">
+      <div class="ic-title">Currency Converter</div>
+      <p class="converter-note">
+        Convert the predicted BTC price - or any amount - into your preferred currency.
+        Enter an amount in USD, choose a target currency, and hit Convert.
+        Exchange rates are fetched live.
+      </p>
+
+      <div class="converter-row">
+        <div class="conv-field">
+          <label>Amount (USD)</label>
+          <input type="number" id="conv-amount" placeholder="e.g. 75000" min="0" step="any" />
+        </div>
+
+        <div class="conv-field">
+          <label>Convert to</label>
+          <select id="conv-currency">
+            <option value="GBP">GBP - British Pound</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="JPY">JPY - Japanese Yen</option>
+            <option value="CAD">CAD - Canadian Dollar</option>
+            <option value="AUD">AUD - Australian Dollar</option>
+            <option value="CHF">CHF - Swiss Franc</option>
+            <option value="CNY">CNY - Chinese Yuan</option>
+            <option value="INR">INR - Indian Rupee</option>
+            <option value="BRL">BRL - Brazilian Real</option>
+            <option value="ZAR">ZAR - South African Rand</option>
+            <option value="NGN">NGN - Nigerian Naira</option>
+            <option value="KES">KES - Kenyan Shilling</option>
+            <option value="MXN">MXN - Mexican Peso</option>
+            <option value="SGD">SGD - Singapore Dollar</option>
+            <option value="HKD">HKD - Hong Kong Dollar</option>
+            <option value="NOK">NOK - Norwegian Krone</option>
+            <option value="SEK">SEK - Swedish Krona</option>
+            <option value="NZD">NZD - New Zealand Dollar</option>
+            <option value="TRY">TRY - Turkish Lira</option>
+            <option value="UAH">UAH - Ukrainian Hryvnia</option>
+            <option value="ZWL">ZWL - Zimbabwean Dollar</option>
+          </select>
+        </div>
+
+        <button class="btn-convert" id="btn-convert" onclick="convertCurrency()">Convert</button>
+      </div>
+
+      <!-- Result shown after conversion completes -->
+      <div class="conv-result" id="conv-result">
+        <div class="conv-amount" id="conv-result-amount"></div>
+        <div class="conv-rate"   id="conv-result-rate"></div>
+      </div>
+    </div>
+
+    <!-- Prediction history table -->
+    <div class="section-title">Prediction History</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date (UTC)</th>
+            <th>Ticker</th>
+            <th>Current</th>
+            <th>Predicted</th>
+            <th>Return</th>
+            <th>Direction</th>
+            <th>Confidence</th>
+            <th>Vol 14d</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <tr>
+            <td colspan="8" class="empty">Run a prediction to see history.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <script>
+    const API   = '/api';
+    const TOKEN = localStorage.getItem('fc_token');
+
+    if (!TOKEN) location.href = 'index.html';
+
+    // Show logged in username in the nav
+    try {
+      const user = JSON.parse(localStorage.getItem('fc_user') || '{}');
+      document.getElementById('nav-user').textContent = user.username || '';
+    } catch {}
+
+    function logout() {
+      localStorage.removeItem('fc_token');
+      localStorage.removeItem('fc_user');
+      location.href = 'index.html';
+    }
+
+    function authHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + TOKEN
+      };
+    }
+
+    // Number formatting helpers
+    function fmt(n, dp = 2, prefix = '') {
+      if (n == null || isNaN(n)) return '-';
+      return prefix + Number(n).toLocaleString('en-US', {
+        minimumFractionDigits: dp,
+        maximumFractionDigits: dp
+      });
+    }
+    function fmtUSD(n) { return fmt(n, 2, '$'); }
+    function fmtPct(n) { return (n >= 0 ? '+' : '') + fmt(n, 4) + '%'; }
+
+    function showError(msg) {
+      const el = document.getElementById('err-alert');
+      el.textContent   = msg;
+      el.style.display = msg ? 'block' : 'none';
+    }
+
+    // Loads the 60-day BTC price chart automatically when the page opens.
+    // Gives the user market context before they look at the forecast.
+    let priceChart = null;
+
+    async function loadHistoricalChart() {
+      try {
+        const r = await fetch(`${API}/forecast/history_chart?ticker=BTC-USD&days=60`, {
+          headers: authHeaders()
+        });
+
+        if (r.status === 401) { logout(); return; }
+
+        const data = await r.json();
+
+        if (!data.dates || !data.dates.length) {
+          document.getElementById('chart-loading').textContent = 'Price history unavailable.';
+          return;
+        }
+
+        document.getElementById('chart-loading').style.display = 'none';
+        const canvas = document.getElementById('price-chart');
+        canvas.style.display = 'block';
+
+        // Destroy the previous chart instance before drawing a new one
+        if (priceChart) { priceChart.destroy(); }
+
+        priceChart = new Chart(canvas, {
+          type: 'line',
+          data: {
+            labels: data.dates,
+            datasets: [{
+              label: 'BTC-USD Close Price',
+              data: data.prices,
+              borderColor: '#00d4aa',
+              backgroundColor: 'rgba(0, 212, 170, .05)',
+              borderWidth: 1.5,
+              pointRadius: 0,
+              fill: true,
+              tension: 0.3,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#131920',
+                borderColor: '#1e2630',
+                borderWidth: 1,
+                titleColor: '#6b7a8d',
+                bodyColor: '#e8edf2',
+                callbacks: {
+                  label: ctx => '$' + Number(ctx.raw).toLocaleString('en-US', {
+                    minimumFractionDigits: 2, maximumFractionDigits: 2
+                  })
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: '#1a2230' },
+                ticks: { color: '#6b7a8d', maxTicksLimit: 8, font: { size: 10 } }
+              },
+              y: {
+                grid: { color: '#1a2230' },
+                ticks: {
+                  color: '#6b7a8d',
+                  font: { size: 10 },
+                  callback: v => '$' + Number(v).toLocaleString('en-US', { maximumFractionDigits: 0 })
+                }
+              }
+            }
+          }
+        });
+
+      } catch (e) {
+        document.getElementById('chart-loading').textContent = 'Could not load chart.';
+      }
+    }
+
+    // Animates the gauge arc and needle based on confidence and direction
+    function updateGauge(confidence, direction) {
+      const pct = confidence * 100;
+
+      const arc    = document.getElementById('gauge-arc');
+      const needle = document.getElementById('gauge-needle');
+      const dot    = document.getElementById('gauge-dot');
+      const valEl  = document.getElementById('gauge-value');
+      const lblEl  = document.getElementById('gauge-label');
+
+      // Arc fills from left to right - dashoffset controls how much is visible
+      arc.style.strokeDashoffset = 220 - (pct / 100 * 220);
+
+      // Needle rotates from -90 (far left) to +90 (far right)
+      needle.style.transform = `rotate(${-90 + (pct / 100 * 180)}deg)`;
+
+      const color = direction === 'up' ? '#00d4aa' : '#f43f5e';
+      arc.style.stroke    = color;
+      dot.style.fill      = color;
+      needle.style.stroke = color;
+
+      valEl.textContent = fmt(pct, 1) + '%';
+      valEl.style.color = color;
+
+      if (pct >= 55) {
+        lblEl.textContent = 'Strong signal';
+        lblEl.className   = 'gauge-label signal-strong';
+      } else if (pct >= 52) {
+        lblEl.textContent = 'Moderate signal';
+        lblEl.className   = 'gauge-label signal-mod';
+      } else {
+        lblEl.textContent = 'Weak / uncertain';
+        lblEl.className   = 'gauge-label signal-weak';
+      }
+    }
+
+    // Builds a two-sentence plain-language explanation from real prediction values.
+     // all come from the API response and change with every prediction.
+    function buildExplanation(d) {
+      const isUp      = d.direction === 'up';
+      const returnAbs = Math.abs(d.pred_return_pct).toFixed(2);
+      const confPct   = (d.confidence * 100).toFixed(0);
+
+      // Describe what the price signals look like based on confidence level
+      const momentumDesc = d.confidence >= 0.55
+        ? 'stronger than usual buying pressure and clear upward momentum'
+        : d.confidence >= 0.52
+        ? 'slightly more buying activity than selling over the past month'
+        : 'mixed signals with no clear dominant trend';
+
+      // Describe how calm or turbulent the market is right now
+      const volDesc = d.vol_14d > 50
+        ? 'The market is quite volatile right now, so prices could swing sharply in either direction.'
+        : d.vol_14d > 30
+        ? 'The market is moderately active at the moment.'
+        : 'The market is relatively calm right now.';
+
+      // Translate the raw sentiment score into plain words
+      const sentDesc = d.sentiment_score > 0.05
+        ? 'News headlines are leaning positive today.'
+        : d.sentiment_score < -0.05
+        ? 'News headlines are leaning negative today.'
+        : 'News headlines are mostly neutral today.';
+
+      // How confident should the user feel about this forecast?
+      const confDesc = d.confidence >= 0.55
+        ? 'a reasonably strong signal'
+        : d.confidence >= 0.52
+        ? 'a weak but slightly positive signal'
+        : 'a low-confidence signal - the market could go either way';
+
+      // If confidence is too low, soften the directional language
+      const sentence1 = d.confidence < 0.52
+        ? `After analysing 30 days of Bitcoin price patterns, the system detected ${momentumDesc} - the forecast leans slightly ${isUp ? 'upward' : 'downward'} by around ${returnAbs}%, but the signal is too weak to be meaningful.`
+        : `After analysing 30 days of Bitcoin price patterns, the system detected ${momentumDesc} - suggesting the price is likely to ${isUp ? 'rise' : 'fall'} by around ${returnAbs}% tomorrow.`;
+
+      const sentence2 = `${volDesc} ${sentDesc} Overall, this is ${confDesc} at ${confPct}% confidence.`;
+
+      document.getElementById('explain-text').innerHTML =
+        `${sentence1}<br/><br/>${sentence2}`;
+    }
+
+    async function runPrediction() {
+      showError('');
+
+      const btn    = document.getElementById('btn-predict');
+      const spin   = document.getElementById('spinner');
+      const status = document.getElementById('status-text');
+
+      btn.disabled = true;
+      spin.style.display = 'block';
+      status.textContent = 'Fetching live data…';
+
+      try {
+        const response = await fetch(`${API}/forecast/predict`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ ticker: 'BTC-USD' })
+        });
+
+        if (response.status === 401) { logout(); return; }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showError(data.error || 'Prediction failed');
+          return;
+        }
+
+        updateMetrics(data);
+        updateDetailCards(data);
+        updateGauge(data.confidence, data.direction);
+        buildExplanation(data);
+
+        // Pre-fill the converter with the predicted price so the user can convert it straight away
+        document.getElementById('conv-amount').value = data.predicted_price.toFixed(2);
+
+        status.textContent = 'Updated ' + new Date().toLocaleTimeString();
+        await loadHistory();
+
+      } catch (err) {
+        showError('Network error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        spin.style.display = 'none';
+      }
+    }
+
+    function updateMetrics(data) {
+      document.getElementById('metric-current').textContent = fmtUSD(data.current_price);
+      document.getElementById('metric-ticker').textContent  = data.ticker;
+      const vol = data.vol_14d;
+    document.getElementById('metric-vol').textContent =
+      vol > 80 ? '🔴 Very Wild'
+      : vol > 50 ? '🟡 Active'
+      : vol > 30 ? '🟢 Steady'
+      : '🟢 Very Quiet';
+    document.getElementById('metric-vol-desc').textContent =
+      vol > 80 ? 'Expect big price moves today'
+      : vol > 50 ? 'Some ups and downs expected'
+      : vol > 30 ? 'Price is moving normally'
+      : 'Unusually quiet for BTC';
+      const predEl       = document.getElementById('metric-predicted');
+      predEl.textContent = fmtUSD(data.predicted_price);
+      predEl.className   = 'm-val ' + (data.direction === 'up' ? 'up' : 'down');
+
+          document.getElementById('metric-return').textContent =
+      fmtPct(data.pred_return_pct) + ' expected change tomorrow';
+    }
+
+    function updateDetailCards(data) {
+      const isUp = data.direction === 'up';
+
+      document.getElementById('detail-ticker').textContent     = data.ticker;
+      document.getElementById('detail-confidence').textContent = fmt(data.confidence * 100, 1) + '%';
+      document.getElementById('detail-timestamp').textContent  = data.timestamp || '-';
+
+      // Show sentiment as plain words 
+      const sent = data.sentiment_score;
+        document.getElementById('detail-sentiment').textContent =
+          sent == null   ? '-'
+          : sent > 0.05  ? 'Positive - good news around BTC today'
+          : sent < -0.05 ? 'Negative - bad news around BTC today'
+          : 'Neutral — nothing major in the news today';
+
+      document.getElementById('detail-direction').innerHTML =
+        `<span class="pill ${isUp ? 'pill-up' : 'pill-down'}">${isUp ? '↑ Up' : '↓ Down'}</span>`;
+    }
+
+    // Converts a USD amount to the selected currency using a free live rate API.
+    // No API key needed for open.er-api.com.
+    async function convertCurrency() {
+      const amountInput  = document.getElementById('conv-amount');
+      const currencyEl   = document.getElementById('conv-currency');
+      const resultBox    = document.getElementById('conv-result');
+      const resultAmount = document.getElementById('conv-result-amount');
+      const resultRate   = document.getElementById('conv-result-rate');
+      const btn          = document.getElementById('btn-convert');
+
+      const amount   = parseFloat(amountInput.value);
+      const currency = currencyEl.value;
+
+      if (!amount || amount <= 0) {
+        resultBox.className      = 'conv-result err';
+        resultAmount.textContent = 'Please enter a valid amount first.';
+        resultRate.textContent   = '';
+        resultBox.style.display  = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      resultBox.style.display = 'none';
+
+      try {
+        const r = await fetch(`https://open.er-api.com/v6/latest/USD`);
+
+        if (!r.ok) throw new Error('Exchange rate service unavailable');
+
+        const data = await r.json();
+
+        if (!data.rates || !data.rates[currency]) throw new Error('Currency not found');
+
+        const rate      = data.rates[currency];
+        const converted = amount * rate;
+
+        resultBox.className      = 'conv-result';
+        resultAmount.textContent = `${converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+        resultRate.textContent   = `Rate: 1 USD = ${rate.toFixed(4)} ${currency}  ·  Amount: $${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+        resultBox.style.display  = 'block';
+
+      } catch (err) {
+        resultBox.className      = 'conv-result err';
+        resultAmount.textContent = 'Could not fetch exchange rate. Please try again.';
+        resultRate.textContent   = err.message;
+        resultBox.style.display  = 'block';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const response = await fetch(`${API}/forecast/history?limit=20`, {
+          headers: authHeaders()
+        });
+
+        if (response.status === 401) { logout(); return; }
+
+        const data = await response.json();
+        renderHistory(Array.isArray(data) ? data : []);
+
+      } catch {}
+    }
+
+    function renderHistory(rows) {
+      const tbody = document.getElementById('history-body');
+
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty">No predictions yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.map(p => {
+        const isUp  = p.direction === 'up';
+        const badge = `<span class="pill ${isUp ? 'pill-up' : 'pill-down'}">${isUp ? '↑ Up' : '↓ Down'}</span>`;
+
+        return `<tr>
+          <td>${new Date(p.created_at).toLocaleString()}</td>
+          <td>${p.ticker}</td>
+          <td>${fmtUSD(p.current_price)}</td>
+          <td class="${isUp ? 'up' : 'down'}">${fmtUSD(p.predicted_price)}</td>
+          <td class="${isUp ? 'up' : 'down'}">${fmtPct(p.pred_return_pct)}</td>
+          <td>${badge}</td>
+          <td>${fmt(p.confidence * 100, 1)}%</td>
+          <td>${p.vol_14d != null ? fmt(p.vol_14d, 2) + '%' : '-'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Load the chart and history as soon as the page opens
+    loadHistoricalChart();
+    loadHistory();
+  </script>
+
+  
+<!-- Server status notice - dismissible by the user -->
+<div id="wake-notice" style="
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(245, 158, 11, .12);
+  border-top: 1px solid rgba(245, 158, 11, .35);
+  padding: .55rem 2rem;
+  font-size: .8rem;
+  color: var(--warn);
+  text-align: center;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;">
+  ⚠️ If the app is slow or shows an error on first load, the server may be waking up - wait a few seconds, refresh the page and try again.
+  <span onclick="this.parentElement.style.display='none'"
+    style="cursor: pointer; opacity: .6; font-size: 1rem; flex-shrink: 0;">✕</span>
+</div>
+
+
+<style>
     /* Disclaimer banner - NFR5 ethical use requirement */
     .disclaimer {
       background: rgba(245, 158, 11, .08);
@@ -57,7 +725,7 @@
       font-family: 'Space Mono', monospace;
     }
 
-    /* Historical price chart panel - satisfies FR2 */
+    /* Historical price chart panel  */
     .chart-panel {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -224,604 +892,8 @@
       font-family: 'Space Mono', monospace;
     }
   </style>
-</head>
-<body>
 
-  <!-- Ethical use disclaimer — NFR5 requirement, must appear on every page -->
-  <div class="disclaimer">
-    ⚠️ For educational and decision-support purposes only. This is not financial advice. Past performance does not guarantee future results.
-  </div>
 
-  <nav>
-    <span class="logo">Fin<span>Cast</span></span>
-
-    <div class="nav-links">
-      <a href="market.html">← Markets</a>
-      <a href="dashboard.html" class="active">Dashboard</a>
-      <a href="models.html">Models</a>
-      <a href="sentiment.html">Sentiment</a>
-    </div>
-
-    <div class="nav-right">
-      <span class="nav-user" id="nav-user"></span>
-      <button class="btn-sm" onclick="logout()">Sign out</button>
-    </div>
-  </nav>
-
-  <main>
-
-    <div class="alert err" id="err-alert"></div>
-
-    <!-- Run prediction button -->
-    <div class="pred-bar">
-      <button class="btn-predict" id="btn-predict" onclick="runPrediction()">
-        <span>Run Prediction</span>
-        <div class="spinner" id="spinner"></div>
-      </button>
-      <span class="status" id="status-text">BTC-USD · Hybrid Fusion Model (GRU 90% + TF 10%)</span>
-    </div>
-
-    <!-- 60-day price chart — gives the user market context before the forecast (FR2) -->
-    <div class="chart-panel">
-      <div class="chart-header">
-        <h3>Historical Price Context — BTC-USD</h3>
-        <span class="chart-range">Last 60 days</span>
-      </div>
-      <div class="chart-wrap">
-        <p class="chart-loading" id="chart-loading">Loading price history…</p>
-        <canvas id="price-chart" style="display: none;"></canvas>
-      </div>
-    </div>
-
-    <!-- Four summary metric cards -->
-    <div class="metrics">
-
-      <div class="metric">
-        <div class="m-label">Current Price</div>
-        <div class="m-val neutral" id="metric-current">—</div>
-        <div class="m-sub" id="metric-ticker">BTC-USD</div>
-      </div>
-
-      <div class="metric">
-        <div class="m-label">Predicted Price (next day)</div>
-        <div class="m-val" id="metric-predicted">—</div>
-        <div class="m-sub" id="metric-return">est. return</div>
-      </div>
-
-      <!-- Confidence gauge — animates after each prediction -->
-      <div class="metric" style="display: flex; flex-direction: column; gap: .5rem;">
-        <div class="m-label">Direction &amp; Confidence</div>
-        <div class="gauge-wrap">
-          <svg class="gauge-svg" viewBox="0 0 180 100" id="gauge-svg">
-            <path d="M20,90 A70,70 0 0,1 160,90" fill="none" stroke="#1e2630" stroke-width="14" stroke-linecap="round" />
-            <path d="M20,90 A70,70 0 0,1 160,90" fill="none" stroke="#00d4aa" stroke-width="14"
-                  stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220" id="gauge-arc"
-                  style="transition: stroke-dashoffset .6s ease;" />
-            <circle cx="90" cy="90" r="6" fill="#00d4aa" id="gauge-dot" />
-            <line x1="90" y1="90" x2="90" y2="28" stroke="#00d4aa" stroke-width="3"
-                  stroke-linecap="round" id="gauge-needle"
-                  style="transform-origin: 90px 90px; transform: rotate(0deg); transition: transform .6s ease;" />
-          </svg>
-          <div class="gauge-val" id="gauge-value">—</div>
-          <div class="gauge-label" id="gauge-label">run a prediction</div>
-        </div>
-      </div>
-
-      <div class="metric">
-        <div class="m-label">14-Day Volatility</div>
-        <div class="m-val neutral" id="metric-vol">—</div>
-        <div class="m-sub">annualised realised vol</div>
-      </div>
-
-    </div>
-
-    <!-- Two info cards: latest forecast details and reliability info -->
-    <div class="info-grid">
-
-      <!-- Latest forecast shown in readable terms -->
-      <div class="info-card">
-        <div class="ic-title">Your Latest Forecast</div>
-        <div class="kv"><span class="kv-k">Instrument</span>          <span class="kv-v" id="detail-ticker">—</span></div>
-        <div class="kv"><span class="kv-k">Direction</span>           <span class="kv-v" id="detail-direction">—</span></div>
-        <div class="kv"><span class="kv-k">Confidence</span>          <span class="kv-v" id="detail-confidence">—</span></div>
-        <div class="kv"><span class="kv-k">News sentiment</span>      <span class="kv-v" id="detail-sentiment">—</span></div>
-        <div class="kv"><span class="kv-k">Forecast time (UTC)</span> <span class="kv-v" id="detail-timestamp" style="font-size: .72rem;">—</span></div>
-      </div>
-
-      <!-- How reliable is this — written for non-technical users -->
-      <div class="info-card">
-        <div class="ic-title">How Reliable Is This?</div>
-        <div class="kv">
-          <span class="kv-k">Correct direction</span>
-          <span class="kv-v" style="color: var(--accent);">54.19% of the time</span>
-        </div>
-        <div class="kv">
-          <span class="kv-k">Tested on</span>
-          <span class="kv-v">Full year 2024 data</span>
-        </div>
-        <div class="kv">
-          <span class="kv-k">Risk-adjusted return</span>
-          <span class="kv-v" style="color: var(--accent);">2.612 Sharpe — good</span>
-        </div>
-        <div class="kv">
-          <span class="kv-k">Worst losing run</span>
-          <span class="kv-v" style="color: var(--danger);">−18.10%</span>
-        </div>
-        <div class="kv">
-          <span class="kv-k">Remember</span>
-          <span class="kv-v" style="color: var(--warn);">Not financial advice</span>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Why did the model predict this? -->
-    <!-- Built dynamically from real prediction values every time —
-         direction, confidence, volatility and sentiment all shape the text -->
-    <div class="explain-card">
-      <div class="ic-title">Why did the model predict this?</div>
-      <p class="explain-text" id="explain-text">
-        <span class="explain-placeholder">Run a prediction above to see a plain-language explanation of what drove the forecast.</span>
-      </p>
-    </div>
-
-    <!-- Currency converter — amount pre-fills with the predicted price after a run -->
-    <!-- Uses open.er-api.com free API, no key needed -->
-    <div class="converter-card">
-      <div class="ic-title">Currency Converter</div>
-      <p class="converter-note">
-        Convert the predicted BTC price — or any amount — into your preferred currency.
-        Enter an amount in USD, choose a target currency, and hit Convert.
-        Exchange rates are fetched live.
-      </p>
-
-      <div class="converter-row">
-        <div class="conv-field">
-          <label>Amount (USD)</label>
-          <input type="number" id="conv-amount" placeholder="e.g. 75000" min="0" step="any" />
-        </div>
-
-        <div class="conv-field">
-          <label>Convert to</label>
-          <select id="conv-currency">
-            <option value="GBP">GBP — British Pound</option>
-            <option value="EUR">EUR — Euro</option>
-            <option value="JPY">JPY — Japanese Yen</option>
-            <option value="CAD">CAD — Canadian Dollar</option>
-            <option value="AUD">AUD — Australian Dollar</option>
-            <option value="CHF">CHF — Swiss Franc</option>
-            <option value="CNY">CNY — Chinese Yuan</option>
-            <option value="INR">INR — Indian Rupee</option>
-            <option value="BRL">BRL — Brazilian Real</option>
-            <option value="ZAR">ZAR — South African Rand</option>
-            <option value="NGN">NGN — Nigerian Naira</option>
-            <option value="KES">KES — Kenyan Shilling</option>
-            <option value="MXN">MXN — Mexican Peso</option>
-            <option value="SGD">SGD — Singapore Dollar</option>
-            <option value="HKD">HKD — Hong Kong Dollar</option>
-            <option value="NOK">NOK — Norwegian Krone</option>
-            <option value="SEK">SEK — Swedish Krona</option>
-            <option value="NZD">NZD — New Zealand Dollar</option>
-            <option value="TRY">TRY — Turkish Lira</option>
-            <option value="UAH">UAH — Ukrainian Hryvnia</option>
-          </select>
-        </div>
-
-        <button class="btn-convert" id="btn-convert" onclick="convertCurrency()">Convert</button>
-      </div>
-
-      <!-- Result shown after conversion completes -->
-      <div class="conv-result" id="conv-result">
-        <div class="conv-amount" id="conv-result-amount"></div>
-        <div class="conv-rate"   id="conv-result-rate"></div>
-      </div>
-    </div>
-
-    <!-- Prediction history table -->
-    <div class="section-title">Prediction History</div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Date (UTC)</th>
-            <th>Ticker</th>
-            <th>Current</th>
-            <th>Predicted</th>
-            <th>Return</th>
-            <th>Direction</th>
-            <th>Confidence</th>
-            <th>Vol 14d</th>
-          </tr>
-        </thead>
-        <tbody id="history-body">
-          <tr>
-            <td colspan="8" class="empty">Run a prediction to see history.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-  </main>
-
-  <script>
-    const API   = '/api';
-    const TOKEN = localStorage.getItem('fc_token');
-
-    if (!TOKEN) location.href = 'index.html';
-
-    // Show logged in username in the nav
-    try {
-      const user = JSON.parse(localStorage.getItem('fc_user') || '{}');
-      document.getElementById('nav-user').textContent = user.username || '';
-    } catch {}
-
-    function logout() {
-      localStorage.removeItem('fc_token');
-      localStorage.removeItem('fc_user');
-      location.href = 'index.html';
-    }
-
-    function authHeaders() {
-      return {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + TOKEN
-      };
-    }
-
-    // Number formatting helpers
-    function fmt(n, dp = 2, prefix = '') {
-      if (n == null || isNaN(n)) return '—';
-      return prefix + Number(n).toLocaleString('en-US', {
-        minimumFractionDigits: dp,
-        maximumFractionDigits: dp
-      });
-    }
-    function fmtUSD(n) { return fmt(n, 2, '$'); }
-    function fmtPct(n) { return (n >= 0 ? '+' : '') + fmt(n, 4) + '%'; }
-
-    function showError(msg) {
-      const el = document.getElementById('err-alert');
-      el.textContent   = msg;
-      el.style.display = msg ? 'block' : 'none';
-    }
-
-    // Loads the 60-day BTC price chart automatically when the page opens.
-    // Gives the user market context before they look at the forecast.
-    let priceChart = null;
-
-    async function loadHistoricalChart() {
-      try {
-        const r = await fetch(`${API}/forecast/history_chart?ticker=BTC-USD&days=60`, {
-          headers: authHeaders()
-        });
-
-        if (r.status === 401) { logout(); return; }
-
-        const data = await r.json();
-
-        if (!data.dates || !data.dates.length) {
-          document.getElementById('chart-loading').textContent = 'Price history unavailable.';
-          return;
-        }
-
-        document.getElementById('chart-loading').style.display = 'none';
-        const canvas = document.getElementById('price-chart');
-        canvas.style.display = 'block';
-
-        // Destroy the previous chart instance before drawing a new one
-        if (priceChart) { priceChart.destroy(); }
-
-        priceChart = new Chart(canvas, {
-          type: 'line',
-          data: {
-            labels: data.dates,
-            datasets: [{
-              label: 'BTC-USD Close Price',
-              data: data.prices,
-              borderColor: '#00d4aa',
-              backgroundColor: 'rgba(0, 212, 170, .05)',
-              borderWidth: 1.5,
-              pointRadius: 0,
-              fill: true,
-              tension: 0.3,
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: '#131920',
-                borderColor: '#1e2630',
-                borderWidth: 1,
-                titleColor: '#6b7a8d',
-                bodyColor: '#e8edf2',
-                callbacks: {
-                  label: ctx => '$' + Number(ctx.raw).toLocaleString('en-US', {
-                    minimumFractionDigits: 2, maximumFractionDigits: 2
-                  })
-                }
-              }
-            },
-            scales: {
-              x: {
-                grid: { color: '#1a2230' },
-                ticks: { color: '#6b7a8d', maxTicksLimit: 8, font: { size: 10 } }
-              },
-              y: {
-                grid: { color: '#1a2230' },
-                ticks: {
-                  color: '#6b7a8d',
-                  font: { size: 10 },
-                  callback: v => '$' + Number(v).toLocaleString('en-US', { maximumFractionDigits: 0 })
-                }
-              }
-            }
-          }
-        });
-
-      } catch (e) {
-        document.getElementById('chart-loading').textContent = 'Could not load chart.';
-      }
-    }
-
-    // Animates the gauge arc and needle based on confidence and direction
-    function updateGauge(confidence, direction) {
-      const pct = confidence * 100;
-
-      const arc    = document.getElementById('gauge-arc');
-      const needle = document.getElementById('gauge-needle');
-      const dot    = document.getElementById('gauge-dot');
-      const valEl  = document.getElementById('gauge-value');
-      const lblEl  = document.getElementById('gauge-label');
-
-      // Arc fills from left to right — dashoffset controls how much is visible
-      arc.style.strokeDashoffset = 220 - (pct / 100 * 220);
-
-      // Needle rotates from -90 (far left) to +90 (far right)
-      needle.style.transform = `rotate(${-90 + (pct / 100 * 180)}deg)`;
-
-      const color = direction === 'up' ? '#00d4aa' : '#f43f5e';
-      arc.style.stroke    = color;
-      dot.style.fill      = color;
-      needle.style.stroke = color;
-
-      valEl.textContent = fmt(pct, 1) + '%';
-      valEl.style.color = color;
-
-      if (pct >= 55) {
-        lblEl.textContent = 'Strong signal';
-        lblEl.className   = 'gauge-label signal-strong';
-      } else if (pct >= 52) {
-        lblEl.textContent = 'Moderate signal';
-        lblEl.className   = 'gauge-label signal-mod';
-      } else {
-        lblEl.textContent = 'Weak / uncertain';
-        lblEl.className   = 'gauge-label signal-weak';
-      }
-    }
-
-    // Builds a two-sentence plain-language explanation from real prediction values.
-    // Nothing is hardcoded — direction, volatility, sentiment and confidence
-    // all come from the API response and change with every prediction.
-    function buildExplanation(d) {
-      const isUp      = d.direction === 'up';
-      const returnAbs = Math.abs(d.pred_return_pct).toFixed(2);
-      const confPct   = (d.confidence * 100).toFixed(0);
-
-      // Describe what the price signals look like based on confidence level
-      const momentumDesc = d.confidence >= 0.55
-        ? 'stronger than usual buying pressure and clear upward momentum'
-        : d.confidence >= 0.52
-        ? 'slightly more buying activity than selling over the past month'
-        : 'mixed signals with no clear dominant trend';
-
-      // Describe how calm or turbulent the market is right now
-      const volDesc = d.vol_14d > 50
-        ? 'The market is quite volatile right now, so prices could swing sharply in either direction.'
-        : d.vol_14d > 30
-        ? 'The market is moderately active at the moment.'
-        : 'The market is relatively calm right now.';
-
-      // Translate the raw sentiment score into plain words
-      const sentDesc = d.sentiment_score > 0.05
-        ? 'News headlines are leaning positive today.'
-        : d.sentiment_score < -0.05
-        ? 'News headlines are leaning negative today.'
-        : 'News headlines are mostly neutral today.';
-
-      // How confident should the user feel about this forecast?
-      const confDesc = d.confidence >= 0.55
-        ? 'a reasonably strong signal'
-        : d.confidence >= 0.52
-        ? 'a weak but slightly positive signal'
-        : 'a low-confidence signal — the market could go either way';
-
-      // If confidence is too low, soften the directional language
-      const sentence1 = d.confidence < 0.52
-        ? `After analysing 30 days of Bitcoin price patterns, the system detected ${momentumDesc} — the forecast leans slightly ${isUp ? 'upward' : 'downward'} by around ${returnAbs}%, but the signal is too weak to be meaningful.`
-        : `After analysing 30 days of Bitcoin price patterns, the system detected ${momentumDesc} — suggesting the price is likely to ${isUp ? 'rise' : 'fall'} by around ${returnAbs}% tomorrow.`;
-
-      const sentence2 = `${volDesc} ${sentDesc} Overall, this is ${confDesc} at ${confPct}% confidence.`;
-
-      document.getElementById('explain-text').innerHTML =
-        `${sentence1}<br/><br/>${sentence2}`;
-    }
-
-    async function runPrediction() {
-      showError('');
-
-      const btn    = document.getElementById('btn-predict');
-      const spin   = document.getElementById('spinner');
-      const status = document.getElementById('status-text');
-
-      btn.disabled = true;
-      spin.style.display = 'block';
-      status.textContent = 'Fetching live data…';
-
-      try {
-        const response = await fetch(`${API}/forecast/predict`, {
-          method: 'POST',
-          headers: authHeaders(),
-          body: JSON.stringify({ ticker: 'BTC-USD' })
-        });
-
-        if (response.status === 401) { logout(); return; }
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          showError(data.error || 'Prediction failed');
-          return;
-        }
-
-        updateMetrics(data);
-        updateDetailCards(data);
-        updateGauge(data.confidence, data.direction);
-        buildExplanation(data);
-
-        // Pre-fill the converter with the predicted price so the user can convert it straight away
-        document.getElementById('conv-amount').value = data.predicted_price.toFixed(2);
-
-        status.textContent = 'Updated ' + new Date().toLocaleTimeString();
-        await loadHistory();
-
-      } catch (err) {
-        showError('Network error: ' + err.message);
-      } finally {
-        btn.disabled = false;
-        spin.style.display = 'none';
-      }
-    }
-
-    function updateMetrics(data) {
-      document.getElementById('metric-current').textContent = fmtUSD(data.current_price);
-      document.getElementById('metric-ticker').textContent  = data.ticker;
-      document.getElementById('metric-vol').textContent     = fmt(data.vol_14d, 2) + '%';
-
-      const predEl       = document.getElementById('metric-predicted');
-      predEl.textContent = fmtUSD(data.predicted_price);
-      predEl.className   = 'm-val ' + (data.direction === 'up' ? 'up' : 'down');
-
-      document.getElementById('metric-return').textContent =
-        fmtPct(data.pred_return_pct) + ' est. return';
-    }
-
-    function updateDetailCards(data) {
-      const isUp = data.direction === 'up';
-
-      document.getElementById('detail-ticker').textContent     = data.ticker;
-      document.getElementById('detail-confidence').textContent = fmt(data.confidence * 100, 1) + '%';
-      document.getElementById('detail-timestamp').textContent  = data.timestamp || '—';
-
-      // Show sentiment as plain words rather than a raw decimal number
-      const sent = data.sentiment_score;
-      document.getElementById('detail-sentiment').textContent =
-        sent == null   ? '—'
-        : sent > 0.05  ? 'Positive (' + fmt(sent, 4) + ')'
-        : sent < -0.05 ? 'Negative (' + fmt(sent, 4) + ')'
-        : 'Neutral (' + fmt(sent, 4) + ')';
-
-      document.getElementById('detail-direction').innerHTML =
-        `<span class="pill ${isUp ? 'pill-up' : 'pill-down'}">${isUp ? '↑ Up' : '↓ Down'}</span>`;
-    }
-
-    // Converts a USD amount to the selected currency using a free live rate API.
-    // No API key needed for open.er-api.com.
-    async function convertCurrency() {
-      const amountInput  = document.getElementById('conv-amount');
-      const currencyEl   = document.getElementById('conv-currency');
-      const resultBox    = document.getElementById('conv-result');
-      const resultAmount = document.getElementById('conv-result-amount');
-      const resultRate   = document.getElementById('conv-result-rate');
-      const btn          = document.getElementById('btn-convert');
-
-      const amount   = parseFloat(amountInput.value);
-      const currency = currencyEl.value;
-
-      if (!amount || amount <= 0) {
-        resultBox.className      = 'conv-result err';
-        resultAmount.textContent = 'Please enter a valid amount first.';
-        resultRate.textContent   = '';
-        resultBox.style.display  = 'block';
-        return;
-      }
-
-      btn.disabled = true;
-      resultBox.style.display = 'none';
-
-      try {
-        const r = await fetch(`https://open.er-api.com/v6/latest/USD`);
-
-        if (!r.ok) throw new Error('Exchange rate service unavailable');
-
-        const data = await r.json();
-
-        if (!data.rates || !data.rates[currency]) throw new Error('Currency not found');
-
-        const rate      = data.rates[currency];
-        const converted = amount * rate;
-
-        resultBox.className      = 'conv-result';
-        resultAmount.textContent = `${converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
-        resultRate.textContent   = `Rate: 1 USD = ${rate.toFixed(4)} ${currency}  ·  Amount: $${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-        resultBox.style.display  = 'block';
-
-      } catch (err) {
-        resultBox.className      = 'conv-result err';
-        resultAmount.textContent = 'Could not fetch exchange rate. Please try again.';
-        resultRate.textContent   = err.message;
-        resultBox.style.display  = 'block';
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    async function loadHistory() {
-      try {
-        const response = await fetch(`${API}/forecast/history?limit=20`, {
-          headers: authHeaders()
-        });
-
-        if (response.status === 401) { logout(); return; }
-
-        const data = await response.json();
-        renderHistory(Array.isArray(data) ? data : []);
-
-      } catch {}
-    }
-
-    function renderHistory(rows) {
-      const tbody = document.getElementById('history-body');
-
-      if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty">No predictions yet.</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = rows.map(p => {
-        const isUp  = p.direction === 'up';
-        const badge = `<span class="pill ${isUp ? 'pill-up' : 'pill-down'}">${isUp ? '↑ Up' : '↓ Down'}</span>`;
-
-        return `<tr>
-          <td>${new Date(p.created_at).toLocaleString()}</td>
-          <td>${p.ticker}</td>
-          <td>${fmtUSD(p.current_price)}</td>
-          <td class="${isUp ? 'up' : 'down'}">${fmtUSD(p.predicted_price)}</td>
-          <td class="${isUp ? 'up' : 'down'}">${fmtPct(p.pred_return_pct)}</td>
-          <td>${badge}</td>
-          <td>${fmt(p.confidence * 100, 1)}%</td>
-          <td>${p.vol_14d != null ? fmt(p.vol_14d, 2) + '%' : '—'}</td>
-        </tr>`;
-      }).join('');
-    }
-
-    // Load the chart and history as soon as the page opens
-    loadHistoricalChart();
-    loadHistory();
-  </script>
 
 </body>
 </html>

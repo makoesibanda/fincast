@@ -3,13 +3,172 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FinCast — Select Market</title>
+  <title>FinCast - Select Market</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="fincast.css" />
 
+</head>
+<body>
+
+  <!-- Ethical use disclaimer - NFR5 -->
+  <div class="disclaimer">
+    ⚠️ For educational and decision-support purposes only. Not financial advice. Past performance does not guarantee future results.
+  </div>
+
+  <nav>
+    <span class="logo">Fin<span>Cast</span></span>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <button class="btn-sm" onclick="logout()">Sign out</button>
+    </div>
+  </nav>
+
+  <main>
+
+    <div class="page-header">
+      <h1>Select a Market</h1>
+      <p>Choose a market category below, then pick the instrument you want to analyse.</p>
+    </div>
+
+    <!-- Step 1: market category selection -->
+    <div class="section-label">Step 1 - Choose Market Category</div>
+    <div class="markets-grid">
+
+      <button class="market-card active-market" onclick="selectMarket('crypto')">
+        <div class="market-icon">₿</div>
+        <div class="market-name">Cryptocurrency</div>
+        <div class="market-desc">Digital assets including Bitcoin and Ethereum priced in fiat currencies.</div>
+        <span class="market-badge badge-live">● Live</span>
+      </button>
+
+      <!-- Placeholder for future market expansion -->
+      <button class="market-card coming-soon" onclick="showComingSoon('Stocks')">
+        <div class="market-icon">📈</div>
+        <div class="market-name">Stocks</div>
+        <div class="market-desc">Stock market instruments.</div>
+        <span class="market-badge badge-soon">Coming Soon</span>
+      </button>
+
+      <button class="market-card coming-soon" onclick="showComingSoon('Forex')">
+        <div class="market-icon">💱</div>
+        <div class="market-name">Forex</div>
+        <div class="market-desc">Foreign exchange pairs across major global currencies.</div>
+        <span class="market-badge badge-soon">Coming Soon</span>
+      </button>
+
+
+    </div>
+
+    <!-- Step 2: asset selection - crypto panel is visible by default -->
+    <div class="asset-panel visible" id="asset-panel-crypto">
+      <div class="asset-panel-title">Step 2 - Select Instrument</div>
+      <div class="assets-grid">
+
+        <!-- BTC-USD is the only fully trained and deployed asset -->
+        <button class="asset-btn asset-primary" onclick="selectAsset('BTC-USD')">
+          <span class="asset-name">BTC-USD</span>
+          <span class="asset-full">Bitcoin / US Dollar</span>
+          <span class="asset-tag tag-live">● Live</span>
+        </button>
+
+    <!-- Remaining assets are placeholders for future model deployments -->
+    <button class="asset-btn asset-soon" onclick="showAssetComingSoon('ETH-USD')">
+      <span class="asset-name">ETH-USD</span>
+      <span class="asset-full">Ethereum / US Dollar</span>
+      <span class="asset-tag tag-soon">Coming Soon</span>
+    </button>
+
+    <button class="asset-btn asset-soon" onclick="showAssetComingSoon('XRP-USD')">
+      <span class="asset-name">XRP-USD</span>
+      <span class="asset-full">XRP Ledger Token / US Dollar</span>
+      <span class="asset-tag tag-soon">Coming Soon</span>
+    </button>
+
+    <button class="asset-btn asset-soon" onclick="showAssetComingSoon('LTC-USD')">
+      <span class="asset-name">LTC-USD</span>
+      <span class="asset-full">Litecoin / US Dollar</span>
+      <span class="asset-tag tag-soon">Coming Soon</span>
+    </button>
+
+    <button class="asset-btn asset-soon" onclick="showAssetComingSoon('ADA-USD')">
+      <span class="asset-name">ADA-USD</span>
+      <span class="asset-full">Cardano / US Dollar</span>
+      <span class="asset-tag tag-soon">Coming Soon</span>
+    </button>
+
+      </div>
+    </div>
+
+  </main>
+  <!--Coming soon messages-->
+
+  <!-- Reused for both market and asset coming soon messages -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-icon">🚧</div>
+      <h3 id="modal-title">Coming Soon</h3>
+      <p id="modal-msg"></p>
+      <button class="modal-close" onclick="closeModal()">Got it</button>
+    </div>
+  </div>
+
+  <script>
+    const TOKEN = localStorage.getItem('fc_token');
+
+    if (!TOKEN) location.href = 'index.html';
+
+    try {
+      const user = JSON.parse(localStorage.getItem('fc_user') || '{}');
+      document.getElementById('nav-user').textContent = user.username || '';
+    } catch {}
+
+    function logout() {
+      localStorage.removeItem('fc_token');
+      localStorage.removeItem('fc_user');
+      location.href = 'index.html';
+    }
+
+    function selectMarket(market) {
+      // Only crypto is live - everything else shows the coming soon modal
+      if (market !== 'crypto') showComingSoon(market);
+    }
+
+    function selectAsset(ticker) {
+      // Only BTC-USD has a trained model - redirect to dashboard or show modal
+      if (ticker === 'BTC-USD') {
+        location.href = 'dashboard.html';
+      } else {
+        showAssetComingSoon(ticker);
+      }
+    }
+
+    function showComingSoon(marketName) {
+      document.getElementById('modal-title').textContent = marketName + ' - Coming Soon';
+      document.getElementById('modal-msg').textContent =
+        'Simon is currently working on ' + marketName + ' support. ' +
+        'At the moment, only the Cryptocurrency market is available. ' +
+        'Please select Cryptocurrency to continue.';
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function showAssetComingSoon(ticker) {
+      document.getElementById('modal-title').textContent = ticker + ' -Coming Soon';
+      document.getElementById('modal-msg').textContent =
+        'Simon is currently working on ' + ticker + ' support. ' +
+        'At the moment, only BTC-USD has a fully trained and validated forecasting model. ' +
+        'Please select BTC-USD to continue.';
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('show');
+    }
+  </script>
+
+  
   <style>
     .page-header {
       text-align: center;
@@ -69,7 +228,7 @@
     }
 
     .market-icon { font-size: 1.8rem; margin-bottom: .75rem; }
-    .market-name { font-size: 1rem; font-weight: 600; margin-bottom: .3rem; }
+    .market-name { font-size: 1rem; font-weight: 600; margin-bottom: .3rem; color: wheat; }
 
     .market-desc {
       font-size: .8rem;
@@ -89,7 +248,7 @@
     .badge-live { background: rgba(0, 212, 170, .15); color: var(--accent); }
     .badge-soon { background: rgba(107, 122, 141, .15); color: var(--muted); }
 
-    /* Asset selection panel — hidden until a market is chosen */
+    /* Asset selection panel - hidden until a market is chosen */
     .asset-panel {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -223,162 +382,7 @@
 
     .modal-close:hover { opacity: .85; }
   </style>
-</head>
-<body>
-
-  <!-- Ethical use disclaimer - NFR5 -->
-  <div class="disclaimer">
-    ⚠️ For educational and decision-support purposes only. Not financial advice. Past performance does not guarantee future results.
-  </div>
-
-  <nav>
-    <span class="logo">Fin<span>Cast</span></span>
-    <div class="nav-right">
-      <span class="nav-user" id="nav-user"></span>
-      <button class="btn-sm" onclick="logout()">Sign out</button>
-    </div>
-  </nav>
-
-  <main>
-
-    <div class="page-header">
-      <h1>Select a Market</h1>
-      <p>Choose a market category below, then pick the instrument you want to analyse.</p>
-    </div>
-
-    <!-- Step 1: market category selection -->
-    <div class="section-label">Step 1 — Choose Market Category</div>
-    <div class="markets-grid">
-
-      <button class="market-card active-market" onclick="selectMarket('crypto')">
-        <div class="market-icon">₿</div>
-        <div class="market-name">Cryptocurrency</div>
-        <div class="market-desc">Digital assets including Bitcoin and Ethereum priced in fiat currencies.</div>
-        <span class="market-badge badge-live">● Live</span>
-      </button>
-
-      <!-- Placeholder for future market expansion -->
-      <button class="market-card coming-soon" onclick="showComingSoon('Equities')">
-        <div class="market-icon">📈</div>
-        <div class="market-name">Equities</div>
-        <div class="market-desc">Stock market instruments including major US-listed companies.</div>
-        <span class="market-badge badge-soon">Coming Soon</span>
-      </button>
-
-      <button class="market-card coming-soon" onclick="showComingSoon('Forex')">
-        <div class="market-icon">💱</div>
-        <div class="market-name">Forex</div>
-        <div class="market-desc">Foreign exchange pairs across major global currencies.</div>
-        <span class="market-badge badge-soon">Coming Soon</span>
-      </button>
-
-      <button class="market-card coming-soon" onclick="showComingSoon('Commodities')">
-        <div class="market-icon">🥇</div>
-        <div class="market-name">Commodities</div>
-        <div class="market-desc">Physical assets including gold, silver, and oil instruments.</div>
-        <span class="market-badge badge-soon">Coming Soon</span>
-      </button>
-
-    </div>
-
-    <!-- Step 2: asset selection — crypto panel is visible by default -->
-    <div class="asset-panel visible" id="asset-panel-crypto">
-      <div class="asset-panel-title">Step 2 — Select Instrument (Cryptocurrency)</div>
-      <div class="assets-grid">
-
-        <!-- BTC-USD is the only fully trained and deployed asset -->
-        <button class="asset-btn asset-primary" onclick="selectAsset('BTC-USD')">
-          <span class="asset-name">BTC-USD</span>
-          <span class="asset-full">Bitcoin / US Dollar</span>
-          <span class="asset-tag tag-live">● Live</span>
-        </button>
-
-        <!-- Remaining assets are placeholders for future model deployments -->
-        <button class="asset-btn asset-soon" onclick="showAssetComingSoon('BTC-GBP')">
-          <span class="asset-name">BTC-GBP</span>
-          <span class="asset-full">Bitcoin / British Pound</span>
-          <span class="asset-tag tag-soon">Coming Soon</span>
-        </button>
-
-        <button class="asset-btn asset-soon" onclick="showAssetComingSoon('ETH-USD')">
-          <span class="asset-name">ETH-USD</span>
-          <span class="asset-full">Ethereum / US Dollar</span>
-          <span class="asset-tag tag-soon">Coming Soon</span>
-        </button>
-
-        <button class="asset-btn asset-soon" onclick="showAssetComingSoon('ETH-GBP')">
-          <span class="asset-name">ETH-GBP</span>
-          <span class="asset-full">Ethereum / British Pound</span>
-          <span class="asset-tag tag-soon">Coming Soon</span>
-        </button>
-
-      </div>
-    </div>
-
-  </main>
-
-  <!-- Reused for both market and asset coming soon messages -->
-  <div class="modal-overlay" id="modal">
-    <div class="modal">
-      <div class="modal-icon">🚧</div>
-      <h3 id="modal-title">Coming Soon</h3>
-      <p id="modal-msg"></p>
-      <button class="modal-close" onclick="closeModal()">Got it</button>
-    </div>
-  </div>
-
-  <script>
-    const TOKEN = localStorage.getItem('fc_token');
-
-    if (!TOKEN) location.href = 'index.html';
-
-    try {
-      const user = JSON.parse(localStorage.getItem('fc_user') || '{}');
-      document.getElementById('nav-user').textContent = user.username || '';
-    } catch {}
-
-    function logout() {
-      localStorage.removeItem('fc_token');
-      localStorage.removeItem('fc_user');
-      location.href = 'index.html';
-    }
-
-    function selectMarket(market) {
-      // Only crypto is live — everything else shows the coming soon modal
-      if (market !== 'crypto') showComingSoon(market);
-    }
-
-    function selectAsset(ticker) {
-      // Only BTC-USD has a trained model — redirect to dashboard or show modal
-      if (ticker === 'BTC-USD') {
-        location.href = 'dashboard.html';
-      } else {
-        showAssetComingSoon(ticker);
-      }
-    }
-
-    function showComingSoon(marketName) {
-      document.getElementById('modal-title').textContent = marketName + ' — Coming Soon';
-      document.getElementById('modal-msg').textContent =
-        'Simon is currently working on ' + marketName + ' support. ' +
-        'At the moment, only the Cryptocurrency market is available. ' +
-        'Please select Cryptocurrency to continue.';
-      document.getElementById('modal').classList.add('show');
-    }
-
-    function showAssetComingSoon(ticker) {
-      document.getElementById('modal-title').textContent = ticker + ' — Coming Soon';
-      document.getElementById('modal-msg').textContent =
-        'Simon is currently working on ' + ticker + ' support. ' +
-        'At the moment, only BTC-USD has a fully trained and validated forecasting model. ' +
-        'Please select BTC-USD to continue.';
-      document.getElementById('modal').classList.add('show');
-    }
-
-    function closeModal() {
-      document.getElementById('modal').classList.remove('show');
-    }
-  </script>
 
 </body>
+
 </html>

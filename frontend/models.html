@@ -136,8 +136,7 @@
         <div id="shap-bars"></div>
         <p class="shap-note">
           Computed with GradientExplainer over 80 test samples and 100 background samples.
-          Return_7 (a notebook addition) ranking in the top 3 validates the expanded feature set.
-        </p>
+          Return_14 ranking first confirms that medium-term price momentum is the strongest signal in the dataset.        </p>
       </div>
 
       <!-- Explains why sentiment SHAP is zero - important to document this clearly -->
@@ -184,7 +183,7 @@
             <td class="num" style="color: var(--accent);">2.612</td>
             <td class="num">54.19%</td>
             <td class="num">-18.10%</td>
-            <td class="num">0.9</td>
+            <td class="num">0.7</td>
             <td style="font-size: .78rem; color: var(--muted);">Grid search optimal</td>
           </tr>
           <tr>
@@ -192,7 +191,7 @@
             <td class="num">1.834</td>
             <td class="num">52.69%</td>
             <td class="num">-26.20%</td>
-            <td class="num">0.1</td>
+            <td class="num">0.3</td>
             <td style="font-size: .78rem; color: var(--muted);">Long-range patterns</td>
           </tr>
           <tr>
@@ -218,7 +217,7 @@
 
     <p class="note-text">
       The ensemble weights were tuned via grid search on the 2023 validation set to maximise Sharpe ratio.
-      The optimal weights (GRU=0.9, LR=0.0, TF=0.1) confirm that GRU dominates the available signal -
+      The optimal weights (GRU=0.7, LR=0.0, TF=0.3) confirm that GRU dominates the available signal -
       the algorithm assigned zero weight to Linear Regression. This provides empirical evidence that GRU
       captures the majority of the predictable structure in daily BTC returns on this dataset.
     </p>
@@ -257,11 +256,11 @@
 
     // SHAP values normalised to 100 - top feature always gets 100, others are relative
     const SHAP_FEATURES = [
-      { feat: 'Volume_Change', pct: 100 },
-      { feat: 'MACD_Signal',   pct: 88  },
-      { feat: 'Return_7',      pct: 75  },
-      { feat: 'BB_Pos',        pct: 61  },
-      { feat: 'RSI_14',        pct: 54  },
+      { feat: 'Return_14',     pct: 100 },
+      { feat: 'MACD_Signal',   pct: 58  },
+      { feat: 'MACD_Hist',     pct: 45  },
+      { feat: 'Volume_Change', pct: 39  },
+      { feat: 'Return_7',      pct: 32  },
     ];
 
     function buildSharpeChart() {

@@ -90,11 +90,11 @@ def model_stats():
 
     # Top 5 features by SHAP importance from GradientExplainer on the test set
     shap_features = [
-        {'feature': 'Volume_Change', 'rank': 1},
-        {'feature': 'MACD_Signal',   'rank': 2},
-        {'feature': 'Return_7',      'rank': 3},
-        {'feature': 'BB_Pos',        'rank': 4},
-        {'feature': 'RSI_14',        'rank': 5},
+        {'feature': 'Return_14',    'rank': 1},
+        {'feature': 'MACD_Signal',  'rank': 2},
+        {'feature': 'MACD_Hist',    'rank': 3},
+        {'feature': 'Volume_Change','rank': 4},
+        {'feature': 'Return_7',     'rank': 5},
     ]
 
     return jsonify({

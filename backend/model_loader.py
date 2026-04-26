@@ -146,7 +146,7 @@ class ModelLoader:
         self.target_scaler  = joblib.load(os.path.join(MODELS_DIR, 'target_scaler.pkl'))
         self.lr_model       = joblib.load(os.path.join(MODELS_DIR, 'lr_reg.pkl'))
 
-        # Fusion weights from validation grid search: GRU=0.9, LR=0.0, Transformer=0.1
+        # Fusion weights from validation grid search: GRU=0.7, LR=0.0, Transformer=0.3
         with open(os.path.join(MODELS_DIR, 'hfm_config.json')) as f:
             hfm_config = json.load(f)
 

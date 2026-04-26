@@ -44,7 +44,9 @@ def build_classifier_head(input_size, dropout=0.2):
 class GRUModel(nn.Module):
     # GRU model trained on 30-day windows of 19 technical features.
     # Outputs a predicted next-day return and a direction probability.
-    # Primary model in the HFM ensemble — carries 90% of the final prediction weight.
+
+    # Primary model in the HFM ensemble - carries 70% of the final prediction weight.
+
     def __init__(self, input_size=19, hidden_size=128, num_layers=2, dropout=0.2):
         super().__init__()
         # Dropout between GRU layers only — not applied on a single layer
@@ -88,8 +90,9 @@ class PositionalEncoding(nn.Module):
 
 
 class TransformerModel(nn.Module):
-    # Transformer encoder used as the secondary model in the HFM ensemble (10% weight).
-    # Self-attention allows it to look across the full 30-day window simultaneously,
+
+    # Transformer encoder used as the secondary model in the HFM ensemble (30% weight). 
+     # Self-attention allows it to look across the full 30-day window simultaneously,
     # capturing longer-range dependencies that step-by-step GRUs can sometimes miss.
     def __init__(self, input_size=19, d_model=64, nhead=4, num_layers=2, dim_ff=128, dropout=0.2):
         super().__init__()

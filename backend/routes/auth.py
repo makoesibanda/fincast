@@ -9,16 +9,17 @@ auth_bp = Blueprint('auth', __name__)
 
 
 def _decode_token(token):
-    # Decodes a JWT and returns the payload, or None if the token is invalid or expired
+
+    # returns None if invalid or expired
     try:
         return jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
     except Exception:
         return None
 
 
-def login_required(f):
-    # Decorator that protects routes — checks for a valid Bearer token in the request header.
-    # Attaches the authenticated user to Flask's g object so routes can access it.
+def login_required(f): 
+
+    # JWT auth decorator
     @wraps(f)
     def wrapped(*args, **kwargs):
         auth = request.headers.get('Authorization', '')
@@ -40,7 +41,8 @@ def login_required(f):
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    # Creates a new user account after validating fields and checking for duplicates
+
+    # register new user
     data     = request.get_json(silent=True) or {}
     username = (data.get('username') or '').strip()
     email    = (data.get('email')    or '').strip().lower()
@@ -67,7 +69,8 @@ def register():
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    # Validates credentials and returns a signed JWT token valid for 24 hours
+
+    # login and return JWT
     data     = request.get_json(silent=True) or {}
     username = (data.get('username') or '').strip()
     password = data.get('password', '')
@@ -93,5 +96,5 @@ def login():
 @auth_bp.route('/me', methods=['GET'])
 @login_required
 def me():
-    # Returns the currently authenticated user's profile
+    # current user info
     return jsonify(g.current_user.to_dict()), 200

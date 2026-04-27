@@ -17,7 +17,7 @@
 </head>
 <body>
 
-  <!-- Ethical use disclaimer - NFR5 requirement, must appear on every page -->
+  <!-- Ethical disclaimer to clarify non-advisory use -->
   <div class="disclaimer">
     ⚠️ For educational and decision-support purposes only. This is not financial advice. Past performance does not guarantee future results.
   </div>
@@ -42,7 +42,7 @@
 
     <div class="alert err" id="err-alert"></div>
 
-    <!-- Run prediction button -->
+    <!-- Trigger for generating a new model prediction - RUN BTN -->
     <div class="pred-bar">
       <button class="btn-predict" id="btn-predict" onclick="runPrediction()">
         <span>Run Prediction</span>
@@ -100,7 +100,7 @@
       <div class="metric">
         <div class="m-label">Market Mood</div>
         <div class="m-val neutral" id="metric-vol">***</div>
-        <div class="m-sub" id="metric-vol-desc">—</div>
+        <div class="m-sub" id="metric-vol-desc">-</div>
       </div>
 
     </div>
@@ -296,8 +296,8 @@
       };
     }
 
-    // Number formatting helpers
-    function fmt(n, dp = 2, prefix = '') {
+    // functions for consistent numeric formatting across the dashboard
+     function fmt(n, dp = 2, prefix = '') {
       if (n == null || isNaN(n)) return '-';
       return prefix + Number(n).toLocaleString('en-US', {
         minimumFractionDigits: dp,
@@ -430,9 +430,8 @@
         lblEl.className   = 'gauge-label signal-weak';
       }
     }
-
-    // Builds a two-sentence plain-language explanation from real prediction values.
-     // all come from the API response and change with every prediction.
+      // Generates a plain-language explanation based on model outputs (confidence, volatility, sentiment)
+      // all come from the API response and change with every prediction.
     function buildExplanation(d) {
       const isUp      = d.direction === 'up';
       const returnAbs = Math.abs(d.pred_return_pct).toFixed(2);
@@ -558,14 +557,14 @@
           sent == null   ? '-'
           : sent > 0.05  ? 'Positive - good news around BTC today'
           : sent < -0.05 ? 'Negative - bad news around BTC today'
-          : 'Neutral — nothing major in the news today';
+          : 'Neutral - nothing major in the news today';
 
       document.getElementById('detail-direction').innerHTML =
         `<span class="pill ${isUp ? 'pill-up' : 'pill-down'}">${isUp ? '↑ Up' : '↓ Down'}</span>`;
     }
 
     // Converts a USD amount to the selected currency using a free live rate API.
-    // No API key needed for open.er-api.com.
+   // Uses a public exchange rate API for real-time currency conversion
     async function convertCurrency() {
       const amountInput  = document.getElementById('conv-amount');
       const currencyEl   = document.getElementById('conv-currency');

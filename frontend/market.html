@@ -13,7 +13,7 @@
 </head>
 <body>
 
-  <!-- Ethical use disclaimer - NFR5 -->
+  <!-- Ethical disclaimer for responsible usage -->
   <div class="disclaimer">
     ⚠️ For educational and decision-support purposes only. Not financial advice. Past performance does not guarantee future results.
   </div>
@@ -33,8 +33,8 @@
       <p>Choose a market category below, then pick the instrument you want to analyse.</p>
     </div>
 
-    <!-- Step 1: market category selection -->
-    <div class="section-label">Step 1 - Choose Market Category</div>
+    <!-- Market category selection -->
+     <div class="section-label">Step 1 - Choose Market Category</div>
     <div class="markets-grid">
 
       <button class="market-card active-market" onclick="selectMarket('crypto')">
@@ -62,7 +62,7 @@
 
     </div>
 
-    <!-- Step 2: asset selection - crypto panel is visible by default -->
+    <!-- Asset selection panel (crypto available by default) -->
     <div class="asset-panel visible" id="asset-panel-crypto">
       <div class="asset-panel-title">Step 2 - Select Instrument</div>
       <div class="assets-grid">
@@ -148,7 +148,7 @@
     function showComingSoon(marketName) {
       document.getElementById('modal-title').textContent = marketName + ' - Coming Soon';
       document.getElementById('modal-msg').textContent =
-        'Simon is currently working on ' + marketName + ' support. ' +
+        'Support for ' + marketName + ' is currently in development. '
         'At the moment, only the Cryptocurrency market is available. ' +
         'Please select Cryptocurrency to continue.';
       document.getElementById('modal').classList.add('show');
@@ -157,9 +157,9 @@
     function showAssetComingSoon(ticker) {
       document.getElementById('modal-title').textContent = ticker + ' -Coming Soon';
       document.getElementById('modal-msg').textContent =
-        'Simon is currently working on ' + ticker + ' support. ' +
-        'At the moment, only BTC-USD has a fully trained and validated forecasting model. ' +
-        'Please select BTC-USD to continue.';
+      'Support for ' + ticker + ' is currently in development. '
+      'At the moment, only BTC-USD has a fully trained and validated forecasting model. ' +
+      'Please select BTC-USD to continue.';
       document.getElementById('modal').classList.add('show');
     }
 

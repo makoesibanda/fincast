@@ -36,7 +36,8 @@
       <p>Full evaluation results from the notebook - test set 2024 (held-out). All metrics computed on data the models never saw during training.</p>
     </div>
 
-    <!-- Top-level summary numbers from the best performing model -->
+    
+    <!-- Summary metrics reported from the held-out 2024 evaluation set -->
     <div class="section-label">Best Results - Test Set 2024</div>
     <div class="summary-grid">
       <div class="sum-card">
@@ -104,18 +105,18 @@
     <div class="section-label">Walk-Forward Validation - 3 x 90-day Windows (2024)</div>
     <div class="wf-grid">
       <div class="wf-card">
-        <div class="wf-win">Window 1 · Jan=Mar</div>
+        <div class="wf-win">Window 1 · Jan-Mar</div>
         <div class="wf-sharpe" style="color: var(--accent);">2.948</div>
         <div class="wf-meta">DirAcc 56.8% · MaxDD -20.3%</div>
       </div>
       <div class="wf-card">
-        <div class="wf-win">Window 2 · Apr=Jun</div>
+        <div class="wf-win">Window 2 · Apr-Jun</div>
         <!-- Negative Sharpe here reflects the BTC consolidation period mid-2024 -->
         <div class="wf-sharpe" style="color: var(--danger);">-1.022</div>
         <div class="wf-meta">DirAcc 46.8% · MaxDD -24.1%</div>
       </div>
       <div class="wf-card">
-        <div class="wf-win">Window 3 · Jul=Dec</div>
+        <div class="wf-win">Window 3 · Jul-Dec</div>
         <div class="wf-sharpe" style="color: var(--accent);">3.511</div>
         <div class="wf-meta">DirAcc 54.5% · MaxDD -12.7%</div>
       </div>
@@ -152,7 +153,7 @@
         </div>
         <div class="shap-kv">
           <span class="shap-kv-k">Training value</span>
-          <span class="shap-kv-v">0.0 (placeholder)</span>
+          <span class="shap-kv-v">0.0 (Historical sentiment unavailable during training period)</span>
         </div>
         <p class="shap-note" style="margin-top: .75rem;">
           Sentiment was 0.0 during training (2018=2022) because real historical news archives are not freely available.
@@ -240,7 +241,7 @@
     }
 
     // All model results from the notebook run- 2024 held-out test set
-    // Fixed evaluation results, not recalculated at runtime
+    // Static metrics exported from the modelling notebook for consistent dashboard display
     const MODELS = [
       { name: 'Linear Regression', sharpe:  1.171, dir_acc: 53.30, max_dd: -33.70, mae: 2.0212, hit_rate: 53.20 },
       { name: 'Random Forest',     sharpe:  0.495, dir_acc: 48.90, max_dd: -44.70, mae: 2.0887, hit_rate: 48.80 },
@@ -270,7 +271,8 @@
 
       document.getElementById('sharpe-chart').innerHTML = sorted.map(m => {
         const pct = Math.abs(m.sharpe) / maxAbs * 100;
-        // Red for negative Sharpe, green for the best, blue for everything else
+
+        // Red is for negative Sharpe, then green for the best and blue for everything else
         const color = m.sharpe < 0 ? 'var(--danger)' : m.best ? 'var(--accent)' : '#0ea5e9';
 
         return `<div class="bar-row">

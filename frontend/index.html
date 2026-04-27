@@ -24,11 +24,11 @@
       <div>
         <h1 class="headline">Intelligent Engine<br /><em>For Financial Forecasting 
 </em></h1>
-        
-        <!-- Key model stats so users know what the system is capable of (according to the notebook) -->
-        <div class="badges">
-          <span class="badge">GRU Sharpe 2.612</span>
-          <span class="badge">DirAcc 54.19%</span>
+         
+         <!-- Key performance indicators of the deployed forecasting model -->
+         <div class="badges">
+          <span class="badge">HFM Sharpe 2.209</span>
+          <span class="badge">DirAcc 52.40%</span>
           <span class="badge">MaxDD -18.1%</span>
           <span class="badge">19 features</span>
           <span class="badge">FinBERT NLP</span>
@@ -57,7 +57,7 @@
           <p class="msg" id="msg-login"></p>
         </form>
 
-        <!-- Register form / hidden until the user switches tabs -->
+        <!-- Account creation form (toggled via tab selection) -->
         <form id="form-reg" style="display: none;" onsubmit="doRegister(event)">
           <div class="fg">
             <label>Username</label>
@@ -82,13 +82,13 @@
   <script>
     const API = '/api';
 
-    // Skip the login page entirely if a session already exists
+    // Skip the login page if a session already exists
     if (localStorage.getItem('fc_token')) {
       location.href = 'market.html';
     }
 
     function switchTab(tab) {
-      // Toggle which form is visible and which tab is highlighted
+      // Handle tab switching between authentication and registration views
       const isLogin = tab === 'login';
       document.getElementById('form-login').style.display = isLogin ? '' : 'none';
       document.getElementById('form-reg').style.display   = isLogin ? 'none' : '';

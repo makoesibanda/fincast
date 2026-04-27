@@ -4,41 +4,53 @@ from flask_cors import CORS
 from config import Config
 from database import db
 
-# Route blueprints — each handles a different section of the API
-from routes.auth      import auth_bp
-from routes.forecast  import forecast_bp
+# Blueprints for different parts of the system
+# keeps routes modular instead of putting everything in one file
+from routes.auth import auth_bp
+from routes.forecast import forecast_bp
 from routes.sentiment import sentiment_bp
-from routes.admin     import admin_bp
+from routes.admin import admin_bp
 
-# Path to the frontend folder so Flask can serve the HTML files
+
+# Path to frontend folder (so Flask can serve the UI directly)
 FRONTEND = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 
 
 def create_app(cfg=Config):
-    # Creates and configures the Flask application.
-    # Using an app factory so the same setup can be used for both
-    # running the server and deploying via wsgi.py.
+    """
+    Creates the Flask app instance.
+
+    Using an app factory here so the same setup works for:
+    - local development (python app.py)
+    - deployment (via wsgi)
+    """
+
     app = Flask(__name__, static_folder=None)
     app.config.from_object(cfg)
 
+    # allow frontend (JS) to talk to backend
     CORS(app)
+
+    # initialise database
     db.init_app(app)
 
-    # Register all API blueprints under their respective URL prefixes
+    # register API routes
     app.register_blueprint(auth_bp,      url_prefix='/api/auth')
     app.register_blueprint(forecast_bp,  url_prefix='/api/forecast')
     app.register_blueprint(sentiment_bp, url_prefix='/api/sentiment')
     app.register_blueprint(admin_bp,     url_prefix='/api/admin')
 
+    # serve main page
     @app.route('/')
     def index():
         return send_from_directory(FRONTEND, 'index.html')
 
+    # serve other frontend files (css, js, html pages)
     @app.route('/<path:filename>')
     def frontend(filename):
-        # Serve any other file from the frontend folder (HTML, CSS, JS)
         return send_from_directory(FRONTEND, filename)
 
+    # create tables if they don't exist yet
     with app.app_context():
         db.create_all()
 
@@ -46,5 +58,6 @@ def create_app(cfg=Config):
 
 
 if __name__ == '__main__':
+    # run locally
     app = create_app()
     app.run(debug=True, host='0.0.0.0', port=5000)

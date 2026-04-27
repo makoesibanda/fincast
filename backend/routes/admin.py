@@ -8,8 +8,8 @@ admin_bp = Blueprint('admin', __name__)
 
 
 def admin_required(f):
-    # Decorator that restricts a route to admin users only.
-    # Validates the JWT token and checks the user's role before allowing access.
+    # admin-only route protection
+
     @wraps(f)
     def wrapped(*args, **kwargs):
         auth = request.headers.get('Authorization', '')
@@ -47,8 +47,7 @@ def list_users():
 @admin_bp.route('/users/<int:uid>', methods=['GET', 'PATCH'])
 @admin_required
 def manage_user(uid):
-    # GET returns a single user's details.
-    # PATCH allows toggling their active status or changing their role.
+     # get or update a single user
     user = User.query.get_or_404(uid)
 
     if request.method == 'GET':
@@ -91,7 +90,8 @@ def list_predictions():
 @admin_bp.route('/stats', methods=['GET'])
 @admin_required
 def stats():
-    # Returns a summary of platform activity — user counts and prediction breakdown
+
+    # platform stats
     total_users  = User.query.count()
     active_users = User.query.filter_by(is_active=True).count()
     total_preds  = Prediction.query.count()

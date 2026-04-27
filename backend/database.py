@@ -5,8 +5,8 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
-    # Stores registered user accounts with role-based access.
-    # Role is either 'user' (default) or 'admin'.
+    # basic user account table
+    # role is either 'user' or 'admin'
     __tablename__ = 'users'
 
     id            = db.Column(db.Integer, primary_key=True)
@@ -17,11 +17,11 @@ class User(db.Model):
     created_at    = db.Column(db.DateTime,    default=datetime.utcnow)
     is_active     = db.Column(db.Boolean,     default=True)
 
-    # One user can have many predictions
+    # link to predictions made by this user
     predictions = db.relationship('Prediction', backref='user', lazy=True)
 
     def to_dict(self):
-        # Returns a safe dictionary representation — password hash is never included
+        # return safe fields only (no password)
         return {
             'id':         self.id,
             'username':   self.username,
@@ -33,8 +33,7 @@ class User(db.Model):
 
 
 class Prediction(db.Model):
-    # Stores every forecast run by a user, including all model output values.
-    # Used to populate the prediction history table on the dashboard.
+    # stores each prediction run from the model
     __tablename__ = 'predictions'
 
     id              = db.Column(db.Integer, primary_key=True)

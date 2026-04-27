@@ -1,48 +1,40 @@
 /*
- * fincast.css - shared styles for all pages
- * FinCast: Intelligent Engine for Financial Forecasting
- * Simon M Sibanda | Goldsmiths, University of London
- */
+  fincast.css
+  Shared styles for FinCast application
+  Used across dashboard, models, sentiment and admin pages
+*/
 
-/* -- Reset-------- */
+/* Basic reset + default font */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-}
-
-/* -- Design tokens------------ */
-:root {
-  /* Backgrounds */
-  --bg:       #060810;
-  --surface:  #0d1117;
-  --surface2: #131920;
-
-  /* Borders */
-  --border:  #1e2630;
-  --border2: #1a2230;
-
-  /* Brand colours */
-  --accent:  #00d4aa;   /* teal - primary action / positive */
-  --accent2: #0ea5e9;   /* blue - secondary */
-  --danger:  #f43f5e;   /* red  - negative / down */
-  --warn:    #f59e0b;   /* amber - caution / disclaimer */
-
-  /* Text */
-  --text:    #e8edf2;
-  --muted:   #6b7a8d;
-  --muted2:  #4a5568;
-
-  /* Spacing helpers */
-  --radius:    10px;
-  --radius-lg: 14px;
-}
-
-/* -- Base body----- */
-* {
   font-family: 'DM Sans', sans-serif;
 }
 
+/* Theme variables used across the app */
+:root {
+  --bg: #060810;
+  --surface: #0d1117;
+  --surface2: #131920;
+
+  --border: #1e2630;
+  --border2: #1a2230;
+
+  --accent: #00d4aa;
+  --accent2: #0ea5e9;
+  --danger: #f43f5e;
+  --warn: #f59e0b;
+
+  --text: #e8edf2;
+  --muted: #6b7a8d;
+  --muted2: #4a5568;
+
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+
+/* Page base */
 body {
   background: var(--bg);
   color: var(--text);
@@ -52,7 +44,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Subtle grid pattern behind everything */
+/* subtle grid effect in the background */
 body::before {
   content: '';
   position: fixed;
@@ -65,7 +57,7 @@ body::before {
   z-index: 0;
 }
 
-/* -- Disclaimer bar----------- */
+/* top disclaimer shown on some pages */
 .disclaimer {
   background: rgba(245, 158, 11, .08);
   border-bottom: 1px solid rgba(245, 158, 11, .2);
@@ -77,7 +69,7 @@ body::before {
   z-index: 101;
 }
 
-/* -- Navigation---- */
+/* navigation bar */
 nav {
   display: flex;
   align-items: center;
@@ -92,6 +84,7 @@ nav {
   z-index: 100;
 }
 
+/* logo styling */
 .logo {
   font-family: 'Space Mono', monospace;
   font-size: .95rem;
@@ -103,6 +96,7 @@ nav {
   opacity: .4;
 }
 
+/* nav links */
 .nav-links {
   display: flex;
   align-items: center;
@@ -121,6 +115,7 @@ nav {
   color: var(--text);
 }
 
+/* right side of nav (user + logout) */
 .nav-right {
   display: flex;
   align-items: center;
@@ -133,7 +128,7 @@ nav {
   font-family: 'Space Mono', monospace;
 }
 
-/* Small button used in nav and elsewhere */
+/* small button (used for logout etc.) */
 .btn-sm {
   padding: .3rem .8rem;
   border: 1px solid var(--border2);
@@ -150,7 +145,7 @@ nav {
   color: var(--text);
 }
 
-/* -- Main content wrapper----- */
+/* main layout container */
 main {
   flex: 1;
   max-width: 1200px;
@@ -161,7 +156,23 @@ main {
   z-index: 1;
 }
 
-/* -- Section label (small uppercase header above sections) ------------ */
+/* page heading */
+.page-title {
+  margin-bottom: 1.75rem;
+}
+
+.page-title h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: .3rem;
+}
+
+.page-title p {
+  color: var(--muted);
+  font-size: .88rem;
+}
+
+/* small section label (used before blocks) */
 .section-label {
   font-size: .72rem;
   color: var(--muted);
@@ -171,7 +182,15 @@ main {
   font-family: 'Space Mono', monospace;
 }
 
-/* -- Metric cards------------- */
+/* small helper text */
+.note-text-sm {
+  font-size: .8rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* metric cards (top stats) */
 .metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -212,12 +231,12 @@ main {
   margin-top: .35rem;
 }
 
-/* Colour helpers for up/down/neutral values */
-.up      { color: var(--accent); }
-.down    { color: var(--danger); }
-.neutral { color: var(--text);   }
+/* value colour helpers */
+.up { color: var(--accent); }
+.down { color: var(--danger); }
+.neutral { color: var(--text); }
 
-/* -- Info cards (key-value pairs) --------------- */
+/* info cards (key-value style) */
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -247,7 +266,7 @@ main {
   font-family: 'Space Mono', monospace;
 }
 
-/* Each key-value row inside an info card */
+/* rows inside info cards */
 .kv {
   display: flex;
   justify-content: space-between;
@@ -271,7 +290,7 @@ main {
   font-size: .82rem;
 }
 
-/* -- Direction pills----------- */
+/* direction tags */
 .pill {
   padding: .15rem .55rem;
   border-radius: 10px;
@@ -279,10 +298,17 @@ main {
   font-weight: 600;
 }
 
-.pill-up   { background: rgba(0, 212, 170, .12); color: var(--accent); }
-.pill-down { background: rgba(244, 63, 94, .12);  color: var(--danger); }
+.pill-up {
+  background: rgba(0, 212, 170, .12);
+  color: var(--accent);
+}
 
-/* -- Prediction history table-- */
+.pill-down {
+  background: rgba(244, 63, 94, .12);
+  color: var(--danger);
+}
+
+/* tables */
 .table-wrap {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -320,13 +346,14 @@ tbody tr:hover {
   background: var(--surface2);
 }
 
+/* empty table state */
 .empty {
   text-align: center;
   color: var(--muted);
   padding: 2rem;
 }
 
-/* -- Error alert---- */
+/* error messages */
 .alert {
   padding: .75rem 1rem;
   border-radius: var(--radius);
@@ -341,7 +368,7 @@ tbody tr:hover {
   color: var(--danger);
 }
 
-/* -- Loading spinner----------- */
+/* small loading spinner */
 .spinner {
   width: 16px;
   height: 16px;
@@ -353,18 +380,18 @@ tbody tr:hover {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* -- Confidence gauge---------- */
+/* confidence gauge */
 .gauge-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  border: none;
-  background: none;
 }
 
 .gauge-svg {
@@ -381,25 +408,8 @@ tbody tr:hover {
 .gauge-label {
   font-size: .78rem;
   color: var(--muted);
-  margin-top: .1rem;
 }
 
 .signal-strong { color: var(--accent); }
-.signal-mod    { color: var(--warn);   }
-.signal-weak   { color: var(--muted);  }
-
-/* -- Page title block---------- */
-.page-title {
-  margin-bottom: 1.75rem;
-}
-
-.page-title h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: .3rem;
-}
-
-.page-title p {
-  color: var(--muted);
-  font-size: .88rem;
-}
+.signal-mod { color: var(--warn); }
+.signal-weak { color: var(--muted); }

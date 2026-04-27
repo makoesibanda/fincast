@@ -3,20 +3,21 @@ import numpy as np
 
 sentiment_bp = Blueprint('sentiment', __name__)
 
-# RSS feeds used to pull financial headlines for sentiment scoring
+# rss sources for headlines
 _FEEDS = [
     'https://feeds.feedburner.com/CoinDesk',
     'https://cryptopanic.com/news/rss/',
     'https://feeds.bbci.co.uk/news/business/rss.xml',
 ]
 
-# Maps FinBERT output labels to numeric sentiment values
+# map labels to numeric sentiment
 _LABEL = {'positive': 1.0, 'negative': -1.0, 'neutral': 0.0}
 
 
 def _get_pipe():
-    # Loads the FinBERT pipeline for text classification.
-    # Returns None if the transformers library is unavailable.
+    
+
+    # load finbert pipeline (returns None if unavailable)
     try:
         from transformers import pipeline
         return pipeline(
@@ -33,8 +34,8 @@ def _get_pipe():
 
 @sentiment_bp.route('/live', methods=['GET'])
 def live():
-    # Fetches headlines from the RSS feeds and scores each one with FinBERT.
-    # Returns the scored headlines and the mean sentiment across all of them.
+     
+    # fetch headlines + score sentiment (mean + per headline)
     max_items = min(int(request.args.get('max', 15)), 30)
 
     try:
@@ -42,7 +43,7 @@ def live():
     except ImportError:
         return jsonify({'error': 'feedparser not installed'}), 500
 
-    # Collect headlines from feeds until we have enough
+    # collect headlines until limit reached
     headlines = []
     for url in _FEEDS:
         try:
@@ -63,14 +64,14 @@ def live():
 
     pipe = _get_pipe()
     if pipe is None:
-        # Return the headlines without scores if FinBERT is unavailable
+        # fallback if finbert not available
         return jsonify({
             'headlines':  headlines,
             'mean_score': 0.0,
             'warning':    'FinBERT unavailable'
         }), 200
 
-    # Score each headline and attach label, confidence, and sentiment value
+     # score each headline
     texts  = [h['title'] for h in headlines]
     raw    = pipe(texts[:max_items])
     scored = []
@@ -95,8 +96,9 @@ def live():
 
 @sentiment_bp.route('/score', methods=['POST'])
 def score():
-    # Scores a list of custom text inputs with FinBERT.
-    # Useful for testing or scoring headlines from other sources.
+    
+
+    # score custom texts (testing endpoint)
     data  = request.get_json(silent=True) or {}
     texts = data.get('texts', [])
 

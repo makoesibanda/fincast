@@ -32,14 +32,14 @@
 
     <div class="page-title">
       <h1>Live Sentiment Feed</h1>
-      <p>Real-time financial news scored with FinBERT (ProsusAI/finbert) - the NLP modality of the multimodal hybrid system.</p>
+      <p>Real-time financial news scored using FinBERT (ProsusAI/finbert) as part of the sentiment analysis component of the forecasting system.</p>
     </div>
 
     <!-- Context note explaining the zero-placeholder used during training -->
     <div class="note-box">
-      <strong>About this panel:</strong> During model training (2018–2022), historical sentiment was unavailable so a zero placeholder was used.
+      <strong>About this panel:</strong> During model training (2018-2022), historical sentiment data was unavailable, so a neutral baseline value (0.0) was used during training.
       This live feed demonstrates the operational FinBERT pipeline - headlines are fetched from financial RSS feeds and scored in real time.
-      The sentiment score feeds directly into the 19th feature of the model at inference time.
+      The sentiment score is incorporated as one of the input features during prediction.
     </div>
 
     <!-- Mean score, headline count, and visual meter -->
@@ -111,7 +111,7 @@
     }
 
     function updateMeter(score) {
-      // Map the -1 to +1 score onto a 0-100% position for the thumb
+      // Convert sentiment score (-1 to +1) into a proportional position on the meter
       const clamped = Math.max(-1, Math.min(1, score));
       const pct     = ((clamped + 1) / 2) * 100;
 
@@ -160,7 +160,7 @@
           return;
         }
 
-        // Render each headline card with its sentiment score and label
+        // Render headline entries with associated sentiment scores and labels
         document.getElementById('headlines-wrap').innerHTML = items.map(h => {
           const label    = h.label || 'neutral';
           const score    = h.sentiment || 0;

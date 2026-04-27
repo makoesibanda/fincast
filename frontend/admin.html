@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FinCast — Admin</title>
+  <title>FinCast - Admin</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -175,20 +175,23 @@
     <div class="alert err" id="err-alert"></div>
 
     <div class="section-label">System Overview</div>
+    <p class="note-text-sm">
+    This panel provides an overview of system usage, including registered users and model predictions generated through the platform.
+    </p>
     <div class="stats-grid">
       <div class="s-card">
         <div class="s-label">Total Users</div>
-        <div class="s-val" id="stat-users">—</div>
-        <div class="s-sub" id="stat-active">— active</div>
+        <div class="s-val" id="stat-users">-</div>
+        <div class="s-sub" id="stat-active">- active</div>
       </div>
       <div class="s-card">
         <div class="s-label">Total Predictions</div>
-        <div class="s-val" id="stat-preds">—</div>
-        <div class="s-sub" id="stat-dirs">— up / — down</div>
+        <div class="s-val" id="stat-preds">-</div>
+        <div class="s-sub" id="stat-dirs">- up / - down</div>
       </div>
       <div class="s-card">
         <div class="s-label">Avg Confidence</div>
-        <div class="s-val" id="stat-conf">—</div>
+        <div class="s-val" id="stat-conf">-</div>
         <div class="s-sub">across all predictions</div>
       </div>
     </div>
@@ -215,7 +218,7 @@
       </div>
     </div>
 
-    <!-- Predictions table — hidden until the tab is clicked -->
+    <!-- Predictions table - hidden until the tab is clicked -->
     <div id="panel-preds" style="display: none;">
       <div class="table-wrap">
         <table>
@@ -267,11 +270,11 @@
     function fmt(n, dp = 2) {
       return n != null && !isNaN(n)
         ? Number(n).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp })
-        : '—';
+        : '-';
     }
 
     function fmtPct(n) {
-      return n != null ? (n >= 0 ? '+' : '') + fmt(n, 4) + '%' : '—';
+      return n != null ? (n >= 0 ? '+' : '') + fmt(n, 4) + '%' : '-';
     }
 
     function showTab(tab) {
@@ -295,14 +298,14 @@
 
       const data = await response.json();
 
-      document.getElementById('stat-users').textContent  = data.users?.total ?? '—';
-      document.getElementById('stat-active').textContent = (data.users?.active ?? '—') + ' active';
-      document.getElementById('stat-preds').textContent  = data.predictions?.total ?? '—';
+      document.getElementById('stat-users').textContent  = data.users?.total ?? '-';
+      document.getElementById('stat-active').textContent = (data.users?.active ?? '-') + ' active';
+      document.getElementById('stat-preds').textContent  = data.predictions?.total ?? '-';
       document.getElementById('stat-dirs').textContent   =
-        (data.predictions?.up ?? '—') + ' up / ' + (data.predictions?.down ?? '—') + ' down';
+        (data.predictions?.up ?? '-') + ' up / ' + (data.predictions?.down ?? '-') + ' down';
 
       const avgConf = data.avg_confidence;
-      document.getElementById('stat-conf').textContent = avgConf != null ? fmt(avgConf * 100, 1) + '%' : '—';
+      document.getElementById('stat-conf').textContent = avgConf != null ? fmt(avgConf * 100, 1) + '%' : '-';
     }
 
     async function loadUsers() {
@@ -386,7 +389,7 @@
           <td>${fmtPct(p.pred_return_pct)}</td>
           <td><span class="pill ${isUp ? 'pill-up' : 'pill-down'}">${isUp ? '↑' : '↓'} ${p.direction}</span></td>
           <td>${fmt(p.confidence * 100, 1)}%</td>
-          <td>${p.sentiment_score != null ? fmt(p.sentiment_score, 4) : '—'}</td>
+          <td>${p.sentiment_score != null ? fmt(p.sentiment_score, 4) : '-'}</td>
           <td>${new Date(p.created_at).toLocaleString()}</td>
         </tr>`;
       }).join('');

@@ -130,9 +130,13 @@
 
         msg.textContent = 'Success!';
         msg.className   = 'msg ok';
+        
+        //If the role is admin, it take them to the admin page
+        //normal useres are redirected to the market page
 
-        setTimeout(() => location.href = 'market.html', 500);
-
+        setTimeout(() => {
+            location.href = data.user.role === 'admin' ? 'admin.html' : 'market.html';
+          }, 500);
       } catch {
         msg.textContent = 'Network error. Please try again or Refresh the page.';
         msg.className   = 'msg err';

@@ -17,13 +17,7 @@ FRONTEND = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 
 
 def create_app(cfg=Config):
-    """
-    Creates the Flask app instance.
-
-    Using an app factory here so the same setup works for:
-    - local development (python app.py)
-    - deployment (via wsgi)
-    """
+    # app factory
 
     app = Flask(__name__, static_folder=None)
     app.config.from_object(cfg)
@@ -53,6 +47,19 @@ def create_app(cfg=Config):
     # create tables if they don't exist yet
     with app.app_context():
         db.create_all()
+
+        # create default admin on first run
+        from werkzeug.security import generate_password_hash
+        from database import User
+        if not User.query.filter_by(role='admin').first():
+            admin = User(
+                username='fincast',
+                email='admin1@fincast.com',
+                password_hash=generate_password_hash('admin1234'),
+                role='admin'
+            )
+            db.session.add(admin)
+            db.session.commit()
 
     return app
 

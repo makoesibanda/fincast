@@ -1,2 +1,10 @@
+[project]
+name = "fincast"
+version = "0.1.0"
+description = "Flask backend application"
+dependencies = [
+    "flask",
+]
+
 [tool.vercel]
 entrypoint = "backend.wsgi:application"
